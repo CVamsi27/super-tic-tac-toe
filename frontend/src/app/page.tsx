@@ -1,4 +1,4 @@
-import PlayWith from "@/components/play-with/play-with";
+import PlayWith from "@/components/PlayWith/PlayWith";
 
 export default function Home() {
   return (
