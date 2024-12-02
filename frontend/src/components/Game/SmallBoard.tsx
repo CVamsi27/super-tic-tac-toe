@@ -16,7 +16,7 @@ export const SmallBoard: React.FC<{
       return board[0] === "X" ? "bg-blue-200" : "bg-red-200";
     }
     return isActive ? "bg-secondary" : "opacity-40";
-  }, [board]);
+  }, [board, isActive]);
 
   return (
     <div
