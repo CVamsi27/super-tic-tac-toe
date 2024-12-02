@@ -15,7 +15,7 @@ export const SmallBoard: React.FC<{
     if (board.every((cell) => cell === board[0] && cell !== null)) {
       return board[0] === "X" ? "bg-blue-200" : "bg-red-200";
     }
-    return isActive ? "border-4" : "opacity-40";
+    return isActive ? "bg-secondary" : "opacity-40";
   }, [board]);
 
   return (
@@ -25,7 +25,7 @@ export const SmallBoard: React.FC<{
       {board.map((cell, cellIndex) => (
         <button
           key={cellIndex}
-          className={`inline-flex items-center justify-center ${disabled ? "cursor-not-allowed" : ""} ${cellIndex == 0 || cellIndex == 3 || cellIndex == 6 ? "" : "border-l"}  ${cellIndex == 6 || cellIndex == 7 || cellIndex == 8 ? "" : "border-b"} w-8 h-8 ${
+          className={`inline-flex items-center justify-center ${isActive ? "border-foreground" : ""} ${disabled ? "cursor-not-allowed" : ""} ${cellIndex == 0 || cellIndex == 3 || cellIndex == 6 ? "" : "border-l"}  ${cellIndex == 6 || cellIndex == 7 || cellIndex == 8 ? "" : "border-b"} w-8 h-8 ${
             cell === "X" ? "text-blue-600" : "text-red-600"
           }`}
           onClick={() => !disabled && onCellClick(boardIndex, cellIndex)}

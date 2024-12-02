@@ -11,7 +11,7 @@ export const PlayerStatus: React.FC<{
   return (
     <div className="flex justify-between items-center mb-4 font-bold">
       <div className="flex items-center space-x-2">
-        <span>Current Player:</span>
+        <span className="text-primary">Current Player:</span>
         {currentPlayer === "X" ? (
           <X className="text-blue-600" />
         ) : (

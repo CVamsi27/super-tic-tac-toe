@@ -18,24 +18,21 @@ const SuperTicTacToe: React.FC = () => {
   } = useSuperTicTacToeState();
 
   return (
-    <div className="flex flex-col items-center justify-center bg-background my-4">
-      <span className="font-bold text-2xl">Super Tic Tac Toe</span>
-      <Card className="w-fit max-w-4xl p-4 shadow-2xl border-0 mt-4">
+    <div className="flex flex-col items-center justify-center bg-background">
+      <Card className="w-fit max-w-4xl p-2 md:p-4 shadow-2xl border-0 mt-4">
         <CardHeader className="p-0">
           <CardTitle className="text-center flex justify-center items-center">
-            {winner && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="ml-4"
+                className="bg-secondary hover:text-secondary hover:bg-primary"
                 onClick={resetGame}
               >
                 <RefreshCw className="w-6 h-6" />
               </Button>
-            )}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="gap-2 mt-2 p-2 md:p-4">
           <PlayerStatus currentPlayer={currentPlayer} winner={winner} />
           <GameBoard
             globalBoard={globalBoard}
