@@ -1,0 +1,19 @@
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.pdb
+
+# Virtual Environment
+env/
+venv/
+
+# Logs
+*.log
+
+# IDE Files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
