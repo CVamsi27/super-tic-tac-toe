@@ -11,3 +11,16 @@ export type SmallBoardType = z.infer<typeof SmallBoardSchema>;
 
 export const GameBoardSchema = z.array(SmallBoardSchema);
 export type GameBoardType = z.infer<typeof GameBoardSchema>;
+
+export enum GameModeType {
+  LOCAL = "local",
+  REMOTE = "remote",
+  AI = "ai",
+}
+
+export const GameSchema = z.object({
+  game_id: z.string(),
+  mode: z.nativeEnum(GameModeType),
+});
+
+export type GameData = z.infer<typeof GameSchema>;
