@@ -17,6 +17,10 @@ class GameService:
         self.games: Dict[str, GameState] = {}
         self.active_websockets: Dict[str, List[WebSocket]] = {}
 
+    def current_board(self, game_id: str) -> GameState:
+        game = self.games[game_id]
+        return game
+
     def create_game(self, mode: GameMode = GameMode.LOCAL) -> GameState:
         game = GameState(mode=mode)
         self.games[game.id] = game

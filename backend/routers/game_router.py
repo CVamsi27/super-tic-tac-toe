@@ -10,6 +10,10 @@ from services.game_service import game_service
 
 router = APIRouter()
 
+@router.get("/current-board")
+async def current_board(game_id: str):
+    return game_service.current_board(game_id).global_board
+
 @router.post("/create-game")
 async def create_game(request: GameCreateRequest):
     game = game_service.create_game(request.mode)
@@ -110,21 +114,21 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
         if game_id in game_service.active_websockets:
             game_service.active_websockets[game_id].remove(websocket)
 
-@router.websocket("/local_game")
-async def local_game_websocket(websocket: WebSocket):
-    await websocket.accept()
+# @router.websocket("/local_game")
+# async def local_game_websocket(websocket: WebSocket):
+#     await websocket.accept()
     
-    try:
-        while True:
-            data = await websocket.receive_json()
+#     try:
+#         while True:
+#             data = await websocket.receive_json()
             
-            if data['type'] == 'create_game':
-                game = game_service.create_game(GameMode.LOCAL)
-                await websocket.send_json({
-                    "type": "game_created",
-                    "game_id": game.id,
-                    "mode": "local"
-                })
+#             if data['type'] == 'create_game':
+#                 game = game_service.create_game(GameMode.LOCAL)
+#                 await websocket.send_json({
+#                     "type": "game_created",
+#                     "game_id": game.id,
+#                     "mode": "local"
+#                 })
     
-    except WebSocketDisconnect:
-        pass
+#     except WebSocketDisconnect:
+#         pass

@@ -6,6 +6,7 @@ import uuid
 class GameMode(str, Enum):
     LOCAL = "local"
     REMOTE = "remote"
+    AI = "ai"
 
 class PlayerSymbol(str, Enum):
     X = "X"
