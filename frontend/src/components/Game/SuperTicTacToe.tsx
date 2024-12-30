@@ -1,22 +1,33 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useSuperTicTacToeState } from "@/hooks/useSuperTicTacToeState";
 import { PlayerStatus } from "./PlayerStatus";
 import { GameBoard } from "./GameBoard";
+import { useParams, useRouter } from "next/navigation";
+import { useGameWebSocket } from "@/hooks/useGameWebSocket";
+import { toast } from "sonner";
+import { ResetGame } from "./ResetGame";
 
 const SuperTicTacToe: React.FC = () => {
-  const {
-    globalBoard,
-    currentPlayer,
-    activeBoard,
-    winner,
-    makeMove,
-    resetGame,
-  } = useSuperTicTacToeState();
+  const { gameId } = useParams<{ gameId: string }>();
+  const { isConnected, latestMessage, sendMessage } = useGameWebSocket(gameId);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isConnected) {
+      if (latestMessage?.type == "error") {
+        toast.error(latestMessage.message);
+        router.push("/");
+      }
+    }
+  }, [isConnected, latestMessage, router]);
+
+  const { globalBoard, currentPlayer, activeBoard, winner, makeMove } =
+    useSuperTicTacToeState();
 
   return (
     <div className="flex flex-col items-center justify-center bg-background h-full">
@@ -26,14 +37,7 @@ const SuperTicTacToe: React.FC = () => {
             <div className="flex justify-between items-center font-bold">
               <span className="text-primary"></span>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="bg-secondary hover:text-secondary hover:bg-primary"
-              onClick={resetGame}
-            >
-              <RefreshCw className="w-6 h-6" />
-            </Button>
+            <ResetGame gameId={gameId} />
           </CardTitle>
         </CardHeader>
         <CardContent className="gap-2 p-2 md:p-4">

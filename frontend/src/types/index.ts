@@ -24,3 +24,11 @@ export const GameSchema = z.object({
 });
 
 export type GameData = z.infer<typeof GameSchema>;
+
+export const WebSocketMessageSchema = z
+  .object({
+    type: z.string(),
+  })
+  .catchall(z.string());
+
+export type WebSocketMessage = z.infer<typeof WebSocketMessageSchema>;

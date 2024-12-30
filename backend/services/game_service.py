@@ -25,6 +25,22 @@ class GameService:
         game = GameState(mode=mode)
         self.games[game.id] = game
         return game
+    
+    def get_existing_game(self, game_id: str) -> bool:
+        return game_id in self.games
+
+    def reset_game(self, game_id: str) -> bool:
+        if game_id not in self.games:
+            raise HTTPException(status_code=404, detail="Game not found")
+        
+        old_game = self.games[game_id]
+        
+        self.games[game_id] = GameState(
+            id=old_game.id,
+            mode=old_game.mode
+        )
+        
+        return True
 
     def join_game(self, game_id: str) -> Player:
         if game_id not in self.games:

@@ -60,6 +60,9 @@ export default {
       fontFamily: {
         sans: ['"Proxima Nova"', ...defaultTheme.fontFamily.sans],
       },
+      animation: {
+        spin: "spin 1s linear infinite",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

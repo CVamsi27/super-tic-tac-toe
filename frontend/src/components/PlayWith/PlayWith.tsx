@@ -6,18 +6,41 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useCreateGame } from "@/hooks/useCreateGame";
 import { GameModeType } from "@/types";
+import { toast } from "sonner";
+import { useState } from "react";
 
 const PlayWith = () => {
-  const { mutate, isLoading, error, reset } = useCreateGame();
   const router = useRouter();
+  const { mutate, isLoading, reset } = useCreateGame();
+  const [isButtonLoading, setIsButtonLoading] = useState<
+    Record<GameModeType, boolean>
+  >({
+    [GameModeType.LOCAL]: false,
+    [GameModeType.REMOTE]: false,
+    [GameModeType.AI]: false,
+  });
 
   const handleGameCreation = (mode: GameModeType) => {
+    setIsButtonLoading((prev) => ({
+      ...prev,
+      [mode]: true,
+    }));
+
     reset();
     mutate(mode, {
       onSuccess: (data) => {
-        if (data?.game_id) {
-          router.push(`/game/${data.game_id}`);
-        }
+        router.push(`/game/${data.game_id}`);
+      },
+      onError: (error) => {
+        toast("Something went wrong", {
+          description: JSON.stringify(error),
+        });
+      },
+      onSettled: () => {
+        setIsButtonLoading((prev) => ({
+          ...prev,
+          [mode]: false,
+        }));
       },
     });
   };
@@ -32,7 +55,9 @@ const PlayWith = () => {
           }
           key={key}
         >
-          {isLoading ? <Loader2 className="animate-spin" /> : null}
+          {isButtonLoading[GameModeType[key as keyof typeof GameModeType]] ? (
+            <Loader2 className="animate-spin" />
+          ) : null}
           {value}
         </CustomButton>
       ))}
