@@ -1,11 +1,15 @@
 "use client";
 
 import config from "@/lib/config";
+import {
+  HTTPExceptionSchema,
+  ResetGameResponseSchema,
+  ResetGameResponse,
+} from "@/types";
 import { useMutation } from "react-query";
-import { z } from "zod";
 
 export const useResetGame = () => {
-  const resetGame = async (game_id: string): Promise<boolean> => {
+  const resetGame = async (game_id: string): Promise<ResetGameResponse> => {
     const response = await fetch(`${config.API_URL}/api/game/reset-game`, {
       method: "POST",
       headers: {
@@ -13,8 +17,16 @@ export const useResetGame = () => {
       },
       body: JSON.stringify({ game_id }),
     });
+
     const data = await response.json();
-    return z.boolean().parse(data);
+
+    if (!response.ok) {
+      const error = HTTPExceptionSchema.parse(data);
+      throw new Error(`Error ${error.status_code}: ${error.detail}`);
+    }
+
+    const result = ResetGameResponseSchema.parse(data);
+    return result;
   };
 
   const { mutate, isLoading } = useMutation({

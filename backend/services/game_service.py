@@ -17,9 +17,13 @@ class GameService:
         self.games: Dict[str, GameState] = {}
         self.active_websockets: Dict[str, List[WebSocket]] = {}
 
+    def _get_game_or_404(self, game_id: str) -> GameState:
+        if game_id not in self.games:
+            raise HTTPException(status_code=404, detail="Game not found")
+        return self.games[game_id]
+
     def current_board(self, game_id: str) -> GameState:
-        game = self.games[game_id]
-        return game
+        return self._get_game_or_404(game_id)
 
     def create_game(self, mode: GameMode = GameMode.LOCAL) -> GameState:
         game = GameState(mode=mode)
@@ -30,23 +34,20 @@ class GameService:
         return game_id in self.games
 
     def reset_game(self, game_id: str) -> bool:
-        if game_id not in self.games:
-            raise HTTPException(status_code=404, detail="Game not found")
-        
-        old_game = self.games[game_id]
+        old_game = self._get_game_or_404(game_id)
         
         self.games[game_id] = GameState(
             id=old_game.id,
             mode=old_game.mode
         )
         
-        return True
+        return {
+            "success": True,
+            "message": "Game reset successfully"
+            }
 
     def join_game(self, game_id: str) -> Player:
-        if game_id not in self.games:
-            raise HTTPException(status_code=404, detail="Game not found")
-        
-        game = self.games[game_id]
+        game = self._get_game_or_404(game_id)
 
         if game.mode == GameMode.LOCAL:
             if not game.players:
@@ -84,9 +85,7 @@ class GameService:
         return player
 
     def make_move(self, game_id: str, move: GameMove) -> GameState:
-        game = self.games.get(game_id)
-        if not game:
-            raise HTTPException(status_code=404, detail="Game not found")
+        game = self._get_game_or_404(game_id)
 
         self._validate_move(game, move)
 
@@ -151,9 +150,8 @@ class GameService:
                         break
 
     async def remove_watcher(self, game_id: str):
-        if game_id in self.games:
-            game = self.games[game_id]
-            if game.watchers_count > 0:
-                game.watchers_count -= 1
+        game = self._get_game_or_404(game_id)
+        if game.watchers_count > 0:
+            game.watchers_count -= 1
 
 game_service = GameService()

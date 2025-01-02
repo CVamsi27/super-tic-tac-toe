@@ -44,5 +44,8 @@ class GameState(BaseModel):
 class GameCreateRequest(BaseModel):
     mode: GameMode = GameMode.LOCAL
 
+class GameResetRequest(BaseModel):
+    game_id: str
+
 class GameJoinRequest(BaseModel):
     game_id: str

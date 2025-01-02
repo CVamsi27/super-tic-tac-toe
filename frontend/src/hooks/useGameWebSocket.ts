@@ -2,7 +2,6 @@ import config from "@/lib/config";
 import { WebSocketMessage } from "@/types";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { json } from "stream/consumers";
 
 export const useGameWebSocket = (gameId: string) => {
   const [messages, setMessages] = useState<WebSocketMessage[]>([]);

@@ -11,8 +11,8 @@ export const ResetGame: React.FC<{
 
   const handleResetGame = () => {
     mutate(gameId, {
-      onSuccess: () => {
-        toast("Reset game Successful!");
+      onSuccess: (data) => {
+        toast(data.message);
       },
       onError: (error) => {
         toast.error("Something went wrong", {

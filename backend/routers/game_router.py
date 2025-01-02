@@ -3,7 +3,8 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 from models.game import (
     GameCreateRequest, 
     GameMove, 
-    GameMode
+    GameMode,
+    GameResetRequest
 )
 from services.game_service import game_service
 
@@ -19,8 +20,8 @@ async def create_game(request: GameCreateRequest):
     return {"game_id": game.id, "mode": game.mode}
 
 @router.post("/reset-game")
-async def reset_game(game_id: str):
-    return game_service.reset_game(game_id)
+async def reset_game(request: GameResetRequest):
+    return game_service.reset_game(request.game_id)
 
 # @router.post("/join-game")
 # async def join_game(request: GameJoinRequest):

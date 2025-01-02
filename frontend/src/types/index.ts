@@ -32,3 +32,15 @@ export const WebSocketMessageSchema = z
   .catchall(z.string());
 
 export type WebSocketMessage = z.infer<typeof WebSocketMessageSchema>;
+
+export const ResetGameResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string().optional(),
+});
+
+export type ResetGameResponse = z.infer<typeof ResetGameResponseSchema>;
+
+export const HTTPExceptionSchema = z.object({
+  detail: z.string(),
+  status_code: z.number(),
+});
