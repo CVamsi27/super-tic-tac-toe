@@ -13,12 +13,12 @@ class PlayerSymbol(str, Enum):
     O = "O"
 
 class PlayerStatus(str, Enum):
-    PLAYER = "player"
-    WATCHER = "watcher"
+    PLAYER = "PLAYER"
+    WATCHER = "WATCHER"
 
 class Player(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    symbol: Optional[PlayerSymbol] = None
+    symbol: PlayerSymbol = "X"
     status: PlayerStatus = PlayerStatus.PLAYER
 
 class GameMove(BaseModel):

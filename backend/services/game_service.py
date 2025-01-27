@@ -46,17 +46,23 @@ class GameService:
             "message": "Game reset successfully"
             }
 
-    def join_game(self, game_id: str) -> Player:
+    def join_game(self, game_id: str, user_id: str) -> Player:
         game = self._get_game_or_404(game_id)
+
+        existing_player = next((p for p in game.players if p.id == user_id), None)
+        if existing_player:
+            return existing_player
 
         if game.mode == GameMode.LOCAL:
             if not game.players:
                 player = Player(
+                    id=user_id,
                     status=PlayerStatus.PLAYER,
                     join_order=0
                 )
             else:
                 player = Player(
+                    id=user_id,
                     status=PlayerStatus.WATCHER,
                     join_order=len(game.players)
                 )
@@ -66,16 +72,21 @@ class GameService:
             if len([p for p in game.players if p.status == PlayerStatus.PLAYER]) < 2:
                 symbol = PlayerSymbol.X if not game.players else PlayerSymbol.O
                 player = Player(
+                    id=user_id,
                     symbol=symbol,
                     status=PlayerStatus.PLAYER,
                     join_order=len(game.players)
                 )
             else:
-                player = Player(
-                    status=PlayerStatus.WATCHER,
-                    join_order=len(game.players)
-                )
-                game.watchers_count += 1
+                if user_id not in [p.id for p in game.players if p.status == PlayerStatus.WATCHER]:
+                    player = Player(
+                        id=user_id,
+                        status=PlayerStatus.WATCHER,
+                        join_order=len(game.players)
+                    )
+                    game.watchers_count += 1
+                else:
+                    raise ValueError("User is already watching the game.")
 
         game.players.append(player)
 
@@ -119,11 +130,11 @@ class GameService:
         if game.winner:
             raise HTTPException(status_code=400, detail="Game already won")
 
-        if game.global_board[move.global_board_index][move.local_board_index] is not None:
+        cell_value = game.global_board[move.global_board_index][move.local_board_index]
+        if cell_value is not None and cell_value != "":
             raise HTTPException(status_code=400, detail="Cell already occupied")
 
-        if (game.active_board is not None and 
-            move.global_board_index != game.active_board):
+        if game.active_board is not None and move.global_board_index != game.active_board:
             raise HTTPException(status_code=400, detail="Invalid board selected")
 
     def _check_global_winner(self, global_board):
@@ -149,7 +160,7 @@ class GameService:
                         del self.games[game_id]
                         break
 
-    async def remove_watcher(self, game_id: str):
+    def remove_watcher(self, game_id: str):
         game = self._get_game_or_404(game_id)
         if game.watchers_count > 0:
             game.watchers_count -= 1
