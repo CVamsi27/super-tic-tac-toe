@@ -22,11 +22,10 @@ export const useResetGame = () => {
 
     if (!response.ok) {
       const error = HTTPExceptionSchema.parse(data);
-      throw new Error(`Error ${error.status_code}: ${error.detail}`);
+      throw new Error(error.detail);
     }
 
-    const result = ResetGameResponseSchema.parse(data);
-    return result;
+    return ResetGameResponseSchema.parse(data);
   };
 
   const { mutate, isLoading } = useMutation({

@@ -3,6 +3,7 @@
 import { PlayerType } from "@/types";
 import { Circle, X } from "lucide-react";
 import React from "react";
+import { Loading } from "../ui/loading";
 
 export const PlayerStatus: React.FC<{
   currentPlayer: PlayerType;
@@ -12,7 +13,9 @@ export const PlayerStatus: React.FC<{
     <div className="flex justify-between items-center mb-4 font-bold">
       <div className="flex items-center space-x-2">
         <span className="text-primary">Current Player:</span>
-        {currentPlayer === "X" ? (
+        {currentPlayer === null ? (
+          <Loading />
+        ) : currentPlayer === "X" ? (
           <X className="text-blue-600" />
         ) : (
           <Circle className="text-red-600" />

@@ -3,11 +3,11 @@
 import { CHOOSE_GAME_TYPES } from "@/lib/const";
 import { CustomButton } from "../ui/custom-button";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import { useCreateGame } from "@/hooks/useCreateGame";
 import { GameModeType } from "@/types";
 import { toast } from "sonner";
 import { useState } from "react";
+import { Loading } from "../ui/loading";
 
 const PlayWith = () => {
   const router = useRouter();
@@ -56,7 +56,7 @@ const PlayWith = () => {
           key={key}
         >
           {isButtonLoading[GameModeType[key as keyof typeof GameModeType]] ? (
-            <Loader2 className="animate-spin" />
+            <Loading />
           ) : null}
           {value}
         </CustomButton>

@@ -4,7 +4,8 @@ import { GameBoardType, PlayerType } from "@/types";
 import { useCallback, useState } from "react";
 import { useWinnerCheck } from "./useWinnerCheck";
 
-export const useSuperTicTacToeState = () => {
+export const useSuperTicTacToeState = (gameId: string) => {
+  console.log(gameId);
   const [currentPlayer, setCurrentPlayer] = useState<PlayerType>("X");
   const [globalBoard, setGlobalBoard] = useState<GameBoardType>(
     Array(9)
