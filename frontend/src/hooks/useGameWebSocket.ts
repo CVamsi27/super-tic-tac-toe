@@ -8,7 +8,6 @@ import { toast } from "sonner";
 const socketInstances: Record<string, WebSocket> = {};
 
 export const useGameWebSocket = (gameId: string, userId: string) => {
-  const [messages, setMessages] = useState<WebSocketMessage[]>([]);
   const [latestMessage, setLatestMessage] = useState<WebSocketMessage | null>(
     null,
   );
@@ -36,7 +35,6 @@ export const useGameWebSocket = (gameId: string, userId: string) => {
     socket.onmessage = (event) => {
       try {
         const message: WebSocketMessage = JSON.parse(event.data);
-        setMessages((prev) => [...prev, message]);
         setLatestMessage(message);
       } catch (err) {
         toast.error("Error parsing message", {
@@ -113,7 +111,6 @@ export const useGameWebSocket = (gameId: string, userId: string) => {
 
   return {
     isConnected,
-    messages,
     latestMessage,
     sendMessage,
   };
