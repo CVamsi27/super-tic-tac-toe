@@ -26,21 +26,21 @@ def mock_game_service():
 def test_create_game_rest_endpoint(mock_game_service):
     mock_game = MagicMock()
     mock_game.id = "test_game_id"
-    mock_game.mode = GameMode.LOCAL
+    mock_game.mode = GameMode.REMOTE
     mock_game_service.create_game.return_value = mock_game
-    response = client.post("/api/game/create-game", json={"mode": "local"})
+    response = client.post("/api/game/create-game", json={"mode": "remote"})
     assert response.status_code == 200
     response_json = response.json()
     assert re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', 
                     response_json["game_id"])
-    assert response_json["mode"] == "local"
+    assert response_json["mode"] == "remote"
 
 def test_join_game_as_player(mock_game_service):
     mock_game = MagicMock()
     mock_game.id = "test_game_id"
-    mock_game.mode = GameMode.LOCAL
+    mock_game.mode = GameMode.REMOTE
     mock_game_service.create_game.return_value = mock_game
-    response = client.post("/api/game/create-game", json={"mode": "local"})
+    response = client.post("/api/game/create-game", json={"mode": "remote"})
     assert response.status_code == 200
     response_json = response.json()
     response = client.post("/api/game/join-game", json={"game_id": response_json["game_id"]}) 
@@ -87,7 +87,7 @@ async def test_websocket_game_flow():
     async with client.websocket_connect("/api/game/ws/test_game") as websocket:
         await websocket.send_json({
             "type": "create_game",
-            "mode": "local"
+            "mode": "remote"
         })
         response = await websocket.receive_json()
         assert response["type"] == "game_created"
@@ -128,20 +128,6 @@ def test_websocket_error_handling(mock_game_service):
             assert "Game is full" in response["message"]
 
     asyncio.run(test_error_flow())
-
-def test_local_game_websocket():
-    """Test local game WebSocket endpoint"""
-    async def test_local_game():
-        async with client.websocket_connect("/api/game/local_game") as websocket:
-            await websocket.send_json({
-                "type": "create_game"
-            })
-            response = await websocket.receive_json()
-            assert response["type"] == "game_created"
-            assert response["mode"] == "local"
-            assert "game_id" in response
-
-    asyncio.run(test_local_game())
 
 @pytest.mark.parametrize("invalid_move", [
     {"type": "make_move", "move": {}}, 

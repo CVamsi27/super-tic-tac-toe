@@ -15,7 +15,6 @@ const PlayWith = () => {
   const [isButtonLoading, setIsButtonLoading] = useState<
     Record<GameModeType, boolean>
   >({
-    [GameModeType.LOCAL]: false,
     [GameModeType.REMOTE]: false,
     [GameModeType.AI]: false,
   });

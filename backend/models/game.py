@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 import uuid
 
 class GameMode(str, Enum):
-    LOCAL = "local"
     REMOTE = "remote"
     AI = "ai"
 
@@ -44,7 +43,7 @@ class GameState(BaseModel):
     move_count: int = 0
 
 class GameCreateRequest(BaseModel):
-    mode: GameMode = GameMode.LOCAL
+    mode: GameMode = GameMode.REMOTE
 
 class GameResetRequest(BaseModel):
     game_id: str

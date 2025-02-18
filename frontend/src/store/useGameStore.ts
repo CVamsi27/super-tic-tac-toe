@@ -17,7 +17,7 @@ const createInitialGameState = (gameId: string): GameState => ({
   watchers: 0,
   winner: null,
   moveCount: 0,
-  mode: "local" as GameModeType,
+  mode: "remote" as GameModeType,
 });
 
 export const useGameStore = create<GameStore>()(

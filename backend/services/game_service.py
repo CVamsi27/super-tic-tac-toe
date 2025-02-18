@@ -27,7 +27,7 @@ class GameService:
     def current_board(self, game_id: str) -> GameState:
         return self._get_game_or_404(game_id)
 
-    def create_game(self, mode: GameMode = GameMode.LOCAL) -> GameState:
+    def create_game(self, mode: GameMode = GameMode.REMOTE) -> GameState:
         game = GameState(mode=mode)
         self.games[game.id] = game
         return game
@@ -127,23 +127,6 @@ class GameService:
             if existing_player.status == PlayerStatus.WATCHER:
                 game.watchers_count += 1
             return existing_player
-
-        if game.mode == GameMode.LOCAL:
-            if not game.players:
-                player = Player(
-                    id=user_id,
-                    status=PlayerStatus.PLAYER,
-                    symbol=PlayerSymbol.X,
-                    join_order=0
-                )
-            else:
-                player = Player(
-                    id=user_id,
-                    status=PlayerStatus.WATCHER,
-                    symbol=None,
-                    join_order=len(game.players)
-                )
-                game.watchers_count += 1
 
         elif game.mode == GameMode.REMOTE:
             if len([p for p in game.players if p.status == PlayerStatus.PLAYER]) < 2:
