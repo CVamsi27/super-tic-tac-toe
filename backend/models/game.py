@@ -11,6 +11,7 @@ class GameMode(str, Enum):
 class PlayerSymbol(str, Enum):
     X = "X"
     O = "O"
+    T = "T"
 
 class PlayerStatus(str, Enum):
     PLAYER = "PLAYER"
@@ -18,13 +19,13 @@ class PlayerStatus(str, Enum):
 
 class Player(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    symbol: PlayerSymbol = "X"
+    symbol: Optional[PlayerSymbol] = None
     status: PlayerStatus = PlayerStatus.PLAYER
 
 class GameMove(BaseModel):
+    playerId: str = Field(default_factory=lambda: str(uuid.uuid4()))
     global_board_index: int
     local_board_index: int
-    player_symbol: PlayerSymbol
 
 class GameState(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -40,6 +41,7 @@ class GameState(BaseModel):
     winner: Optional[PlayerSymbol] = None
     last_move_timestamp: Optional[float] = None
     mode: Optional[GameMode]
+    move_count: int = 0
 
 class GameCreateRequest(BaseModel):
     mode: GameMode = GameMode.LOCAL
