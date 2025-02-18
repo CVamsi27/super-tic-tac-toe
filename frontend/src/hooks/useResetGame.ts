@@ -7,6 +7,7 @@ import {
   ResetGameResponse,
 } from "@/types";
 import { useMutation } from "react-query";
+import { toast } from "sonner";
 
 export const useResetGame = () => {
   const resetGame = async (game_id: string): Promise<ResetGameResponse> => {
@@ -22,7 +23,7 @@ export const useResetGame = () => {
 
     if (!response.ok) {
       const error = HTTPExceptionSchema.parse(data);
-      throw new Error(error.detail);
+      toast.error(error.detail);
     }
 
     return ResetGameResponseSchema.parse(data);

@@ -1,109 +1,89 @@
 "use client";
 
-import { GameBoardType, PlayerType } from "@/types";
-import { useCallback, useState } from "react";
-import { useWinnerCheck } from "./useWinnerCheck";
+import { useEffect, useMemo } from "react";
+import { useGameStore } from "@/store/useGameStore";
+import { useGameWebSocket } from "./useGameWebSocket";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
-export const useSuperTicTacToeState = (gameId: string) => {
-  console.log(gameId);
-  const [currentPlayer, setCurrentPlayer] = useState<PlayerType>("X");
-  const [globalBoard, setGlobalBoard] = useState<GameBoardType>(
-    Array(9)
-      .fill(null)
-      .map(() => Array(9).fill(null)),
+export const useSuperTicTacToeState = (gameId: string, userId: string) => {
+  const { games, addPlayer, updateWatcher, updateGame } = useGameStore();
+  const router = useRouter();
+
+  const currentPlayer = useMemo(
+    () => games[gameId]?.players.find((p) => p?.id === userId),
+    [games, gameId, userId],
   );
-  const [activeBoard, setActiveBoard] = useState<number | null>(null);
-  const [winner, setWinner] = useState<PlayerType | null>(null);
 
-  const { checkBoardWinner } = useWinnerCheck();
+  const gameState = games[gameId] || null;
 
-  const findNextActiveBoard = useCallback(
-    (
-      currentCellIndex: number,
-      currentGlobalBoard: GameBoardType,
-    ): number | null => {
-      if (currentGlobalBoard[currentCellIndex].every((cell) => cell !== null)) {
-        const availableBoards = currentGlobalBoard.reduce(
-          (acc, board, index) => {
-            if (board.some((cell) => cell === null)) acc.push(index);
-            return acc;
+  const { isConnected, latestMessage, sendMessage } = useGameWebSocket(
+    gameId,
+    userId,
+  );
+
+  useEffect(() => {
+    if (!latestMessage) return;
+
+    switch (latestMessage.type) {
+      case "error":
+        toast.error(latestMessage.message);
+        router.push("/");
+        break;
+
+      case "player_joined":
+        addPlayer(
+          gameId,
+          {
+            id: latestMessage.userId,
+            symbol: latestMessage.symbol,
+            status: latestMessage.status,
           },
-          [] as number[],
+          latestMessage.watchers_count || 0,
+          latestMessage.game_state.global_board,
+          latestMessage.game_state.active_board,
+          latestMessage.game_state.move_count,
+          latestMessage.game_state.winner,
+          latestMessage.game_state.current_player,
         );
+        break;
 
-        return availableBoards.length > 0 ? availableBoards[0] : null;
-      }
-      return currentCellIndex;
-    },
-    [],
-  );
-
-  const makeMove = useCallback(
-    (boardIndex: number, cellIndex: number) => {
-      if (
-        winner ||
-        globalBoard[boardIndex][cellIndex] ||
-        (activeBoard !== null && boardIndex !== activeBoard)
-      ) {
-        return;
-      }
-
-      const newGlobalBoard = globalBoard.map((board) => [...board]);
-      newGlobalBoard[boardIndex][cellIndex] = currentPlayer;
-
-      const smallBoardWinner = checkBoardWinner(newGlobalBoard[boardIndex]);
-      if (smallBoardWinner) {
-        newGlobalBoard[boardIndex] = newGlobalBoard[boardIndex].map(() =>
-          smallBoardWinner === "T" ? null : smallBoardWinner,
+      case "game_update":
+        updateGame(
+          gameId,
+          latestMessage.game_state.global_board,
+          latestMessage.game_state.active_board,
+          latestMessage.game_state.move_count,
+          latestMessage.game_state.winner,
+          latestMessage.game_state.current_player,
         );
-      }
+        break;
 
-      const nextActiveBoard = findNextActiveBoard(cellIndex, newGlobalBoard);
-      setActiveBoard(nextActiveBoard);
+      case "watchers_update":
+        updateWatcher(gameId, latestMessage.watchers_count || 0);
+        break;
+    }
+  }, [
+    latestMessage,
+    router,
+    userId,
+    gameId,
+    addPlayer,
+    updateWatcher,
+    updateGame,
+  ]);
 
-      const globalBoardWinner = checkBoardWinner(
-        newGlobalBoard.map((board) =>
-          board.every((cell) => cell === board[0] && cell !== null)
-            ? board[0]
-            : null,
-        ),
-      );
-
-      setGlobalBoard(newGlobalBoard);
-
-      if (globalBoardWinner && globalBoardWinner !== "T") {
-        setWinner(globalBoardWinner);
-      }
-
-      setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
-    },
-    [
-      currentPlayer,
-      globalBoard,
-      activeBoard,
-      winner,
-      checkBoardWinner,
-      findNextActiveBoard,
-    ],
-  );
-
-  const resetGame = useCallback(() => {
-    setGlobalBoard(
-      Array(9)
-        .fill(null)
-        .map(() => Array(9).fill(null)),
-    );
-    setCurrentPlayer("X");
-    setActiveBoard(null);
-    setWinner(null);
-  }, []);
+  useEffect(() => {
+    if (isConnected) {
+      sendMessage({ type: "join_game", userId });
+    } else {
+      sendMessage({ type: "leave_watcher", gameId, userId });
+    }
+  }, [isConnected, sendMessage, gameId, userId]);
 
   return {
-    globalBoard,
+    gameState,
     currentPlayer,
-    activeBoard,
-    winner,
-    makeMove,
-    resetGame,
+    sendMessage,
   };
 };

@@ -1,61 +1,105 @@
 "use client";
 
-import { Player } from "@/types";
+import { GameBoardType, GameModeType, GameState, GameStore } from "@/types";
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
-interface GameState {
-  players: Player[];
-  watchers: number;
-}
+const initialBoardState: GameBoardType = Array(9)
+  .fill(null)
+  .map(() => Array(9).fill(null));
 
-interface GameStore {
-  games: Record<string, GameState>;
-  addGame: (gameId: string, gameState: GameState) => void;
-  updateGame: (gameId: string, gameState: Partial<GameState>) => void;
-  addPlayer: (gameId: string, playerDetails: Player, watchers: number) => void;
-  updateWatcher: (gameId: string, watchers: number) => void;
-}
+const createInitialGameState = (gameId: string): GameState => ({
+  id: gameId,
+  players: [],
+  globalBoard: initialBoardState,
+  currentPlayer: null,
+  activeBoard: null,
+  watchers: 0,
+  winner: null,
+  moveCount: 0,
+  mode: "local" as GameModeType,
+});
 
-export const useGameStore = create<GameStore>((set) => ({
-  games: {},
-  addGame: (gameId, gameState) =>
-    set((state) => ({
-      games: { ...state.games, [gameId]: gameState },
-    })),
-  updateGame: (gameId, gameState) =>
-    set((state) => ({
-      games: {
-        ...state.games,
-        [gameId]: { ...state.games[gameId], ...gameState },
-      },
-    })),
-  addPlayer: (gameId, playerDetails, watchers) =>
-    set((state) => {
-      const existingGame = state.games[gameId] || { players: [], watchers: 0 };
-      return {
-        games: {
-          ...state.games,
-          [gameId]: {
-            ...existingGame,
-            players: [...(existingGame.players || []), playerDetails],
-            watchers,
+export const useGameStore = create<GameStore>()(
+  persist(
+    (set) => ({
+      games: {},
+
+      initializeGame: (gameId: string) =>
+        set((state) => ({
+          games: {
+            ...state.games,
+            [gameId]: state.games[gameId] || createInitialGameState(gameId),
           },
-        },
-      };
-    }),
-  updateWatcher: (gameId, watchers) =>
-    set((state) => {
-      const existingGame = state.games[gameId] || { players: [] };
+        })),
 
-      return {
-        games: {
-          ...state.games,
-          [gameId]: {
-            ...existingGame,
-            players: [...existingGame.players],
-            watchers,
+      addPlayer: (
+        gameId,
+        playerDetails,
+        watchers,
+        globalBoard,
+        activeBoard,
+        moveCount,
+        winner,
+        currentPlayer,
+      ) =>
+        set((state) => {
+          const currentGame =
+            state.games[gameId] || createInitialGameState(gameId);
+          return {
+            games: {
+              ...state.games,
+              [gameId]: {
+                ...currentGame,
+                players: [...(currentGame.players || []), playerDetails],
+                watchers,
+                currentPlayer,
+                globalBoard,
+                activeBoard,
+                moveCount,
+                winner,
+              },
+            },
+          };
+        }),
+
+      updateWatcher: (gameId, watchers) =>
+        set((state) => ({
+          games: {
+            ...state.games,
+            [gameId]: {
+              ...state.games[gameId],
+              watchers,
+            },
           },
-        },
-      };
+        })),
+
+      updateGame: (
+        gameId,
+        globalBoard,
+        activeBoard,
+        moveCount,
+        winner,
+        currentPlayer,
+      ) =>
+        set((state) => ({
+          games: {
+            ...state.games,
+            [gameId]: {
+              ...state.games[gameId],
+              globalBoard,
+              activeBoard,
+              moveCount,
+              winner,
+              currentPlayer,
+            },
+          },
+        })),
     }),
-}));
+    {
+      name: "game-storage",
+      storage: createJSONStorage(() => sessionStorage),
+      skipHydration: true,
+    },
+  ),
+);

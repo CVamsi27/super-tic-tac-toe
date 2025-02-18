@@ -5,27 +5,21 @@ import { WebSocketMessage } from "@/types";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 
-const socketInstances: Record<string, WebSocket> = {};
-
 export const useGameWebSocket = (gameId: string, userId: string) => {
+  const [isConnected, setIsConnected] = useState(false);
   const [latestMessage, setLatestMessage] = useState<WebSocketMessage | null>(
     null,
   );
-  const [isConnected, setIsConnected] = useState<boolean>(false);
-  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const socketRef = useRef<WebSocket | null>(null);
+  const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const connectWebSocket = useCallback(() => {
-    if (socketInstances[gameId]?.readyState === WebSocket.OPEN) {
-      toast.info("Player already available");
-      return;
-    }
+    if (socketRef.current?.readyState === WebSocket.OPEN) return;
 
     const protocol = config.API_URL.startsWith("https") ? "wss" : "ws";
     const socket = new WebSocket(
-      `${protocol}://${config.API_URL.replace(/^https?:\/\//, "")}/api/game/ws/connect?game_id=${encodeURIComponent(gameId)}&user_id=${encodeURIComponent(userId)}`,
+      `${protocol}://${config.API_URL.replace(/^https?:\/\//, "")}/api/game/ws/connect?game_id=${gameId}&user_id=${userId}`,
     );
-
-    socketInstances[gameId] = socket;
 
     socket.onopen = () => {
       setIsConnected(true);
@@ -34,84 +28,59 @@ export const useGameWebSocket = (gameId: string, userId: string) => {
 
     socket.onmessage = (event) => {
       try {
-        const message: WebSocketMessage = JSON.parse(event.data);
-        setLatestMessage(message);
+        setLatestMessage(JSON.parse(event.data));
       } catch (err) {
-        toast.error("Error parsing message", {
-          description: JSON.stringify(err),
-        });
+        console.error("Failed to parse message:", err);
       }
-    };
-
-    socket.onerror = () => {
-      toast.error("An error encountered");
     };
 
     socket.onclose = () => {
       setIsConnected(false);
-      toast.info("Connection closed, retrying...");
-
-      if (!retryTimeoutRef.current) {
-        retryTimeoutRef.current = setTimeout(connectWebSocket, 3000);
-      }
+      setTimeout(connectWebSocket, 3000);
     };
+
+    socketRef.current = socket;
+  }, [gameId, userId]);
+
+  const handleLeave = useCallback(() => {
+    if (leaveTimeoutRef.current) {
+      clearTimeout(leaveTimeoutRef.current);
+    }
+
+    socketRef.current?.send(
+      JSON.stringify({ type: "leave_watcher", gameId, userId }),
+    );
   }, [gameId, userId]);
 
   useEffect(() => {
     if (userId) connectWebSocket();
 
-    const sendLeaveWatcher = () => {
-      const socket = socketInstances[gameId];
-      if (socket?.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ type: "leave_watcher" }));
-      }
-    };
-
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      sendLeaveWatcher();
-      event.preventDefault();
-    };
-
-    const handleVisibilityChange = () => {
+    const handleVisibility = () => {
       if (document.visibilityState === "hidden") {
-        sendLeaveWatcher();
+        handleLeave();
+      } else if (leaveTimeoutRef.current) {
+        clearTimeout(leaveTimeoutRef.current);
       }
     };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    window.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("unload", sendLeaveWatcher);
+    window.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("beforeunload", handleLeave);
 
     return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      window.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("unload", sendLeaveWatcher);
+      window.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("beforeunload", handleLeave);
 
-      if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
-
-      const socket = socketInstances[gameId];
-      if (socket) {
-        socket.close();
-        delete socketInstances[gameId];
-      }
+      socketRef.current?.close();
     };
-  }, [connectWebSocket, gameId, userId]);
+  }, [connectWebSocket, handleLeave, userId]);
 
-  const sendMessage = useCallback(
-    (message: WebSocketMessage) => {
-      const socket = socketInstances[gameId];
-      if (!isConnected || socket?.readyState !== WebSocket.OPEN) {
-        toast.warning("Unable to connect");
-        return;
-      }
-      socket.send(JSON.stringify(message));
-    },
-    [isConnected, gameId],
-  );
+  const sendMessage = useCallback((message: WebSocketMessage) => {
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify(message));
+    } else {
+      console.error("Unable to connect");
+    }
+  }, []);
 
-  return {
-    isConnected,
-    latestMessage,
-    sendMessage,
-  };
+  return { isConnected, latestMessage, sendMessage };
 };

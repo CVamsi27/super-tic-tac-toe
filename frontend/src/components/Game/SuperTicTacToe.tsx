@@ -1,70 +1,25 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSuperTicTacToeState } from "@/hooks/useSuperTicTacToeState";
 import { PlayerStatus } from "./PlayerStatus";
 import { GameBoard } from "./GameBoard";
-import { useParams, useRouter } from "next/navigation";
-import { useGameWebSocket } from "@/hooks/useGameWebSocket";
-import { toast } from "sonner";
+import { useParams } from "next/navigation";
 import { ResetGame } from "./ResetGame";
-import { useGameStore } from "@/store/useGameStore";
 
 const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
   const { gameId } = useParams<{ gameId: string }>();
-  const router = useRouter();
-
-  const { games, addPlayer, updateWatcher } = useGameStore();
-  const gameState = games[gameId] || null;
-
-  const { isConnected, latestMessage, sendMessage } = useGameWebSocket(
-    gameId,
-    userId,
-  );
-
-  useEffect(() => {
-    if (!latestMessage) return;
-
-    switch (latestMessage.type) {
-      case "error":
-        toast.error(latestMessage.message);
-        router.push("/");
-        break;
-
-      case "player_joined":
-        addPlayer(
-          gameId,
-          {
-            id: latestMessage.userId,
-            symbol: latestMessage.symbol,
-            status: latestMessage.status,
-          },
-          latestMessage.watchers_count || 0,
-        );
-        break;
-
-      case "watchers_update":
-        updateWatcher(gameId, latestMessage.watchers_count || 0);
-        break;
-    }
-  }, [latestMessage, router, userId, gameId, addPlayer, updateWatcher]);
-
-  useEffect(() => {
-    if (isConnected) {
-      sendMessage({ type: "join_game", userId });
-    } else {
-      sendMessage({ type: "leave_watcher", userId });
-    }
-  }, [isConnected, sendMessage, userId]);
-
-  const { globalBoard, activeBoard, winner, makeMove } =
-    useSuperTicTacToeState(gameId);
-
+  const { gameState, sendMessage } = useSuperTicTacToeState(gameId, userId);
   return (
     <div
       className={`flex flex-col items-center justify-center bg-background h-full ${
-        gameState?.players.find((p) => p?.id === userId)?.status === "WATCHER"
+        (gameState?.players.find((p) => p?.id === userId)?.status ===
+          "WATCHER" ||
+          gameState?.currentPlayer !==
+            gameState?.players.find((p) => p?.id === userId)?.symbol ||
+          gameState?.currentPlayer === null) &&
+        gameState.winner === null
           ? "pointer-events-none"
           : ""
       }`}
@@ -80,16 +35,16 @@ const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
         </CardHeader>
         <CardContent className="gap-2 p-2 md:p-4">
           <PlayerStatus
-            currentPlayer={
-              gameState?.players.find((p) => p?.id === userId)?.symbol || null
+            gameId={gameId}
+            currentPlayer={gameState?.currentPlayer || null}
+            actualPlayer={
+              gameState?.players.find((p) => p?.id === userId) || null
             }
-            winner={winner}
           />
           <GameBoard
-            globalBoard={globalBoard}
-            activeBoard={activeBoard}
-            makeMove={makeMove}
-            winner={winner}
+            gameId={gameId}
+            userId={userId}
+            sendMessage={sendMessage}
           />
         </CardContent>
       </Card>

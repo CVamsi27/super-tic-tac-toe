@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const PlayerSymbol = z.enum(["X", "O"]).nullable();
+export const PlayerSymbol = z.enum(["X", "O", "T"]).nullable();
 export type PlayerType = z.infer<typeof PlayerSymbol>;
 
 export const PlayerStatusSchema = z.enum(["PLAYER", "WATCHER"]);
@@ -16,7 +16,6 @@ export const GameBoardSchema = z.array(SmallBoardSchema);
 export type GameBoardType = z.infer<typeof GameBoardSchema>;
 
 export enum GameModeType {
-  LOCAL = "local",
   REMOTE = "remote",
   AI = "ai",
 }
@@ -25,6 +24,42 @@ export const GameSchema = z.object({
   game_id: z.string(),
   mode: z.nativeEnum(GameModeType),
 });
+
+export interface GameState {
+  id: string;
+  players: Player[];
+  globalBoard: GameBoardType;
+  currentPlayer: PlayerType | null;
+  activeBoard: number | null;
+  watchers: number;
+  winner: PlayerType | null;
+  moveCount: number;
+  mode: GameModeType;
+}
+
+export interface GameStore {
+  games: Record<string, GameState>;
+  initializeGame: (gameId: string) => void;
+  addPlayer: (
+    gameId: string,
+    playerDetails: Player,
+    watchers: number,
+    globalBoard: GameBoardType,
+    activeBoard: number,
+    moveCount: number,
+    winner: PlayerType,
+    currentPlayer: PlayerType,
+  ) => void;
+  updateWatcher: (gameId: string, watchers: number) => void;
+  updateGame: (
+    gameId: string,
+    globalBoard: GameBoardType,
+    activeBoard: number,
+    moveCount: number,
+    winner: PlayerType,
+    currentPlayer: PlayerType,
+  ) => void;
+}
 
 export type GameData = z.infer<typeof GameSchema>;
 
@@ -45,16 +80,18 @@ const JoinGameMessageSchema = z.object({
 
 const MakeMoveMessageSchema = z.object({
   type: z.literal("make_move"),
+  gameId: z.string(),
   userId: z.string(),
   move: z.object({
+    playerId: z.string(),
     global_board_index: z.number(),
     local_board_index: z.number(),
-    move_count: z.number().optional().default(0),
   }),
 });
 
 const LeaveWatcherMessageSchema = z.object({
   type: z.literal("leave_watcher"),
+  gameId: z.string(),
   userId: z.string(),
 });
 
@@ -66,26 +103,36 @@ const ErrorMessageSchema = z.object({
 
 const PlayerJoinedMessageSchema = z.object({
   type: z.literal("player_joined"),
-  game_id: z.string(),
+  gameId: z.string(),
   userId: z.string(),
   status: PlayerStatusSchema,
   symbol: PlayerSymbol,
   watchers_count: z.number(),
+  game_state: z.object({
+    global_board: GameBoardSchema,
+    active_board: z.number(),
+    move_count: z.number(),
+    winner: PlayerSymbol.nullable(),
+    current_player: PlayerSymbol.nullable(),
+  }),
 });
 
 const GameUpdateMessageSchema = z.object({
   type: z.literal("game_update"),
+  gameId: z.string(),
   userId: z.string(),
   game_state: z.object({
-    global_board: z.array(z.array(z.string().nullable())),
+    global_board: GameBoardSchema,
+    active_board: z.number(),
     move_count: z.number(),
-    winner: z.string().nullable(),
+    winner: PlayerSymbol.nullable(),
+    current_player: PlayerSymbol.nullable(),
   }),
 });
 
 const WatchersUpdateMessageSchema = z.object({
   type: z.literal("watchers_update"),
-  game_id: z.string(),
+  gameId: z.string(),
   watchers_count: z.number(),
 });
 
