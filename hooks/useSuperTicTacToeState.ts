@@ -77,7 +77,7 @@ export const useSuperTicTacToeState = (gameId: string, userId: string) => {
     if (isConnected) {
       sendMessage({ type: "join_game", userId });
     } else {
-      sendMessage({ type: "leave_watcher", gameId, userId });
+      sendMessage({ type: "leave", gameId, userId });
     }
   }, [isConnected, sendMessage, gameId, userId]);
 

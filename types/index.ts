@@ -70,7 +70,7 @@ export const WebSocketMessageType = z.enum([
   "watchers_update",
   "join_game",
   "make_move",
-  "leave_watcher",
+  "leave",
 ]);
 
 const JoinGameMessageSchema = z.object({
@@ -89,8 +89,8 @@ const MakeMoveMessageSchema = z.object({
   }),
 });
 
-const LeaveWatcherMessageSchema = z.object({
-  type: z.literal("leave_watcher"),
+const LeaveMessageSchema = z.object({
+  type: z.literal("leave"),
   gameId: z.string(),
   userId: z.string(),
 });
@@ -139,7 +139,7 @@ const WatchersUpdateMessageSchema = z.object({
 export const WebSocketMessageSchema = z.discriminatedUnion("type", [
   JoinGameMessageSchema,
   MakeMoveMessageSchema,
-  LeaveWatcherMessageSchema,
+  LeaveMessageSchema,
   ErrorMessageSchema,
   PlayerJoinedMessageSchema,
   GameUpdateMessageSchema,

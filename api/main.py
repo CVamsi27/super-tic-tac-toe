@@ -3,8 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from api.routers import game_router
+from api.db.database import init_db
 
 app = FastAPI(title="Super Tic Tac Toe")
+
+init_db()
 
 app.add_middleware(
     CORSMiddleware,

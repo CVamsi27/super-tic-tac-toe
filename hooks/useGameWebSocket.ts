@@ -47,9 +47,7 @@ export const useGameWebSocket = (gameId: string, userId: string) => {
       clearTimeout(leaveTimeoutRef.current);
     }
 
-    socketRef.current?.send(
-      JSON.stringify({ type: "leave_watcher", gameId, userId }),
-    );
+    socketRef.current?.send(JSON.stringify({ type: "leave", gameId, userId }));
   }, [gameId, userId]);
 
   useEffect(() => {

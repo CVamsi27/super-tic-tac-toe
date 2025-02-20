@@ -20,6 +20,7 @@ class Player(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     symbol: Optional[PlayerSymbol] = None
     status: PlayerStatus = PlayerStatus.PLAYER
+    join_order: int = 0
 
 class GameMove(BaseModel):
     playerId: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -47,6 +48,4 @@ class GameCreateRequest(BaseModel):
 
 class GameResetRequest(BaseModel):
     game_id: str
-
-class GameJoinRequest(BaseModel):
-    game_id: str
+    user_id: str

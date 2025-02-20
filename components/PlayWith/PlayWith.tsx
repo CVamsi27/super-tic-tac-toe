@@ -25,6 +25,11 @@ const PlayWith = () => {
       [mode]: true,
     }));
 
+    if (mode === "ai") {
+      router.push(`/soon`);
+      return;
+    }
+
     reset();
     mutate(mode, {
       onSuccess: (data) => {

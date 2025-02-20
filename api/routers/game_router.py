@@ -4,10 +4,6 @@ from api.services.game_service import game_service
 
 router = APIRouter()
 
-@router.get("/current-board")
-async def current_board(game_id: str):
-    return game_service.current_board(game_id).global_board
-
 @router.post("/create-game")
 async def create_game(request: GameCreateRequest):
     game = game_service.create_game(request.mode)
@@ -15,15 +11,7 @@ async def create_game(request: GameCreateRequest):
 
 @router.post("/reset-game")
 async def reset_game(request: GameResetRequest):
-    return game_service.reset_game(request.game_id)
-
-@router.get("/get-game/{game_id}")
-async def get_game_by_id(game_id: str):
-    return game_service.get_game_by_id(game_id)
-
-@router.get("/get-current-player/{game_id}")
-async def get_current_player(game_id: str):
-    return game_service.get_current_player(game_id)
+    return game_service.reset_game(request.game_id, request.user_id)
 
 @router.websocket("/ws/connect")
 async def websocket_endpoint(websocket: WebSocket, game_id: str, user_id: str):
@@ -48,7 +36,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, user_id: str):
             handlers = {
                 'join_game': lambda: game_service.handle_join_game(websocket, game_id, user_id, game_service.active_websockets[game_id]),
                 'make_move': lambda: game_service.handle_make_move(websocket, game_id, user_id, data['move'], game_service.active_websockets[game_id]),
-                'leave_watcher': lambda: game_service.handle_leave_watcher(game_id, data['userId'], game_service.active_websockets[game_id])
+                'leave': lambda: game_service.handle_leave(game_id, data['userId'], game_service.active_websockets[game_id])
             }
             
             handler = handlers.get(message_type)

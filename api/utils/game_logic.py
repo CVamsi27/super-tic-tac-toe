@@ -27,8 +27,12 @@ def check_board_winner(board: List[PlayerSymbol | None]) -> PlayerSymbol | None:
 
 def find_next_active_board(
     current_cell_index: int, 
-    current_global_board: List[List[PlayerSymbol | None]]
+    current_global_board: List[List[PlayerSymbol | None]],
+    final_winner: PlayerSymbol | None
 ) -> int | None:
+    if final_winner is not None:
+        return None
+
     if all(cell is not None for cell in current_global_board[current_cell_index]):
         available_boards = [
             index for index, board in enumerate(current_global_board)

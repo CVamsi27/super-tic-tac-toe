@@ -3,12 +3,17 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "fastapi-dev": "python3 -m uvicorn api.main:app --reload",
+    "pyi": "pip install -r requirements.txt",
+    "db-migrate": "alembic upgrade head",
+    "db-init": "python3 -c 'from api.db.database import init_db; init_db()'",
+    "fastapi-dev": "pnpm db-migrate && python3 -m uvicorn api.main:app --reload",
     "next-dev": "next dev",
     "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\"",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db-downgrade": "alembic downgrade -1",
+    "db-reset": "alembic downgrade base && npm run db-migrate"
   },
   "dependencies": {
     "@types/node": "22.5.5",
