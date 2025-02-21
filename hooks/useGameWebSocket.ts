@@ -1,84 +1,107 @@
 "use client";
 
-import config from "@/lib/config";
-import { WebSocketMessage } from "@/types";
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState } from "react";
+import { useGameStore } from "@/store/useGameStore";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { WebSocketStatus } from "@/types";
 
-export const useGameWebSocket = (gameId: string, userId: string) => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [latestMessage, setLatestMessage] = useState<WebSocketMessage | null>(
-    null,
+export const useGameSocket = (gameId: string, userId: string) => {
+  const { games, addPlayer, updateWatcher, updateGame } = useGameStore();
+  const router = useRouter();
+  const [status, setStatus] = useState<WebSocketStatus>(
+    WebSocketStatus.PENDING,
   );
   const socketRef = useRef<WebSocket | null>(null);
-  const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const connectWebSocket = useCallback(() => {
-    if (socketRef.current?.readyState === WebSocket.OPEN) return;
-
-    const protocol = config.API_URL.startsWith("https") ? "wss" : "ws";
+  if (!socketRef.current && gameId && userId) {
     const socket = new WebSocket(
-      `${protocol}://${config.API_URL.replace(/^https?:\/\//, "")}/api/game/ws/connect?game_id=${gameId}&user_id=${userId}`,
+      `/api/py/game/ws/connect?game_id=${gameId}&user_id=${userId}`,
     );
 
     socket.onopen = () => {
-      setIsConnected(true);
-      toast.success("Player joined successfully");
+      setStatus(WebSocketStatus.CONNECTED);
+      toast.success("Connected to game");
+      socket.send(JSON.stringify({ type: "join_game", userId }));
     };
 
     socket.onmessage = (event) => {
       try {
-        setLatestMessage(JSON.parse(event.data));
+        const message = JSON.parse(event.data);
+
+        switch (message.type) {
+          case "error":
+            setStatus(WebSocketStatus.ERROR);
+            toast.error(message.message);
+            router.push("/");
+            break;
+
+          case "player_joined":
+            addPlayer(
+              gameId,
+              {
+                id: message.userId,
+                symbol: message.symbol,
+                status: message.status,
+              },
+              message.watchers_count || 0,
+              message.game_state.global_board,
+              message.game_state.active_board,
+              message.game_state.move_count,
+              message.game_state.winner,
+              message.game_state.current_player,
+            );
+            break;
+
+          case "game_update":
+            updateGame(
+              gameId,
+              message.game_state.global_board,
+              message.game_state.active_board,
+              message.game_state.move_count,
+              message.game_state.winner,
+              message.game_state.current_player,
+            );
+            break;
+
+          case "watchers_update":
+            updateWatcher(gameId, message.watchers_count || 0);
+            break;
+        }
       } catch (err) {
         console.error("Failed to parse message:", err);
       }
     };
 
     socket.onclose = () => {
-      setIsConnected(false);
-      setTimeout(connectWebSocket, 3000);
+      if (status === WebSocketStatus.CONNECTED) {
+        socket.send(JSON.stringify({ type: "leave", gameId, userId }));
+      }
+      setStatus(WebSocketStatus.DISCONNECTED);
+      toast.error("Disconnected from game");
+      socketRef.current = null;
+    };
+
+    socket.onerror = (error) => {
+      console.error("WebSocket Error:", error);
+      setStatus(WebSocketStatus.ERROR);
+      toast.error("WebSocket connection error");
+      socket.close();
     };
 
     socketRef.current = socket;
-  }, [gameId, userId]);
+  }
 
-  const handleLeave = useCallback(() => {
-    if (leaveTimeoutRef.current) {
-      clearTimeout(leaveTimeoutRef.current);
-    }
-
-    socketRef.current?.send(JSON.stringify({ type: "leave", gameId, userId }));
-  }, [gameId, userId]);
-
-  useEffect(() => {
-    if (userId) connectWebSocket();
-
-    const handleVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        handleLeave();
-      } else if (leaveTimeoutRef.current) {
-        clearTimeout(leaveTimeoutRef.current);
-      }
-    };
-
-    window.addEventListener("visibilitychange", handleVisibility);
-    window.addEventListener("beforeunload", handleLeave);
-
-    return () => {
-      window.removeEventListener("visibilitychange", handleVisibility);
-      window.removeEventListener("beforeunload", handleLeave);
-
-      socketRef.current?.close();
-    };
-  }, [connectWebSocket, handleLeave, userId]);
-
-  const sendMessage = useCallback((message: WebSocketMessage) => {
-    if (socketRef.current?.readyState === WebSocket.OPEN) {
+  const sendMessage = (message: any) => {
+    if (
+      status === WebSocketStatus.CONNECTED &&
+      socketRef.current?.readyState === WebSocket.OPEN
+    ) {
       socketRef.current.send(JSON.stringify(message));
     } else {
-      console.error("Unable to connect");
+      console.error("Unable to send message: WebSocket not connected");
     }
-  }, []);
+  };
 
-  return { isConnected, latestMessage, sendMessage };
+  return { gameState: games[gameId] || null, sendMessage, status };
 };

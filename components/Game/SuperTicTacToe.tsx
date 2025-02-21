@@ -2,15 +2,15 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSuperTicTacToeState } from "@/hooks/useSuperTicTacToeState";
 import { PlayerStatus } from "./PlayerStatus";
 import { GameBoard } from "./GameBoard";
 import { useParams } from "next/navigation";
 import { ResetGame } from "./ResetGame";
+import { useGameSocket } from "@/hooks/useGameWebSocket";
 
 const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
   const { gameId } = useParams<{ gameId: string }>();
-  const { gameState, sendMessage } = useSuperTicTacToeState(gameId, userId);
+  const { gameState, sendMessage } = useGameSocket(gameId, userId);
   return (
     <div
       className={`flex flex-col items-center justify-center bg-background h-full`}

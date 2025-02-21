@@ -18,6 +18,14 @@ export type GameBoardType = z.infer<typeof GameBoardSchema>;
 export enum GameModeType {
   REMOTE = "remote",
   AI = "ai",
+  RULES = "rules",
+}
+
+export enum WebSocketStatus {
+  CONNECTED = "connected",
+  DISCONNECTED = "disconnected",
+  PENDING = "pending",
+  ERROR = "error",
 }
 
 export const GameSchema = z.object({

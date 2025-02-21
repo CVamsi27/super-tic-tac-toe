@@ -8,6 +8,7 @@ import { GameModeType } from "@/types";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Loading } from "../ui/loading";
+import { extractErrorMessage } from "@/lib/utils";
 
 const PlayWith = () => {
   const router = useRouter();
@@ -17,6 +18,7 @@ const PlayWith = () => {
   >({
     [GameModeType.REMOTE]: false,
     [GameModeType.AI]: false,
+    [GameModeType.RULES]: false,
   });
 
   const handleGameCreation = (mode: GameModeType) => {
@@ -28,6 +30,9 @@ const PlayWith = () => {
     if (mode === "ai") {
       router.push(`/soon`);
       return;
+    } else if (mode === "rules") {
+      router.push(`/rules`);
+      return;
     }
 
     reset();
@@ -36,9 +41,9 @@ const PlayWith = () => {
         router.push(`/game/${data.game_id}`);
       },
       onError: (error) => {
-        toast("Something went wrong", {
-          description: JSON.stringify(error),
-        });
+        console.log(error);
+        const message = extractErrorMessage(error);
+        toast.error("Something went wrong", { description: message });
       },
       onSettled: () => {
         setIsButtonLoading((prev) => ({

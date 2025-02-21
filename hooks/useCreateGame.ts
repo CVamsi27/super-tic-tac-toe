@@ -1,6 +1,5 @@
 "use client";
 
-import config from "@/lib/config";
 import { useGameStore } from "@/store/useGameStore";
 import { GameData, GameModeType, GameBoardType, GameSchema } from "@/types";
 import { useEffect, useMemo } from "react";
@@ -10,7 +9,7 @@ export const useCreateGame = () => {
   const { games } = useGameStore();
 
   const createGame = async (mode: GameModeType): Promise<GameData> => {
-    const response = await fetch(`${config.API_URL}/api/game/create-game`, {
+    const response = await fetch(`/api/py/game/create-game`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

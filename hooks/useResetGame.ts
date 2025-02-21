@@ -1,6 +1,5 @@
 "use client";
 
-import config from "@/lib/config";
 import {
   HTTPExceptionSchema,
   ResetGameResponseSchema,
@@ -17,7 +16,7 @@ export const useResetGame = () => {
     game_id: string;
     user_id: string;
   }): Promise<ResetGameResponse> => {
-    const response = await fetch(`${config.API_URL}/api/game/reset-game`, {
+    const response = await fetch(`/api/py/game/reset-game`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

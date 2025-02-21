@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional, Set
 from fastapi import HTTPException, WebSocket, WebSocketDisconnect
 from datetime import datetime, timedelta
 from fastapi.websockets import WebSocketState
+from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 
 from api.models.game import (
     GameState, 
@@ -13,25 +14,21 @@ from api.models.game import (
 )
 from api.db.models import GameDB, PlayerDB
 from api.db.database import get_db
-from api.utils.game_logic import check_board_winner, find_next_active_board
+from api.utils.game_logic import (
+    check_board_winner, 
+    find_next_active_board, 
+    convert_global_board_from_db, 
+    convert_global_board_to_db,
+    validate_move,
+    check_global_winner,
+    remove_player_from_game,
+    cleanup_inactive_games
+)
 
 class GameService:
     def __init__(self):
         self.games: Dict[str, GameState] = {}
         self.active_websockets: Dict[str, List[WebSocket]] = {}
-
-    def _convert_global_board_to_db(self, board: List[List[Optional[PlayerSymbol]]]) -> List[str]:
-        return [str(cell) if cell else '' for row in board for cell in row]
-
-    def _convert_global_board_from_db(self, board_data: List[str]) -> List[List[Optional[PlayerSymbol]]]:
-        board = []
-        for i in range(0, 81, 9):
-            row = []
-            for j in range(9):
-                cell = board_data[i + j]
-                row.append(PlayerSymbol(cell) if cell else None)
-            board.append(row)
-        return board
 
     def _game_db_to_state(self, game_db: GameDB) -> GameState:
         players = [
@@ -46,7 +43,7 @@ class GameService:
         return GameState(
             id=game_db.id,
             players=players,
-            global_board=self._convert_global_board_from_db(game_db.global_board),
+            global_board=convert_global_board_from_db(game_db.global_board),
             current_player=game_db.current_player,
             active_board=game_db.active_board,
             watchers_count=game_db.watchers_count,
@@ -70,6 +67,7 @@ class GameService:
             return game_state
         
     def _cleanup_empty_game(self, game_id: str, db) -> bool:
+        print("Cleaning up empty game")
         if game_id not in self.games:
             game_db = db.query(GameDB).filter(GameDB.id == game_id).first()
             if game_db and (game_db.winner or not game_db.players):
@@ -110,7 +108,7 @@ class GameService:
             game_db = GameDB(
                 id=game.id,
                 mode=mode,
-                global_board=self._convert_global_board_to_db(game.global_board)
+                global_board=convert_global_board_to_db(game.global_board)
             )
             db.add(game_db)
             db.commit()
@@ -154,7 +152,7 @@ class GameService:
         with get_db() as db:
             game_db = db.query(GameDB).filter(GameDB.id == game_id).first()
             
-            game_db.global_board = self._convert_global_board_to_db(new_game.global_board)
+            game_db.global_board = convert_global_board_to_db(new_game.global_board)
             game_db.current_player = None
             game_db.active_board = None
             game_db.watchers_count = 0
@@ -175,11 +173,17 @@ class GameService:
         disconnected_sockets = set()
         
         for client in active_sockets:
-            if client.client_state == WebSocketState.CONNECTED:
-                try:
-                    await client.send_json(message)
-                except WebSocketDisconnect:
+            try:
+                if client.client_state == WebSocketState.CONNECTED:
+                    try:
+                        await client.send_json(message)
+                    except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
+                        disconnected_sockets.add(client)
+                else:
                     disconnected_sockets.add(client)
+            except Exception as e:
+                print(f"Error broadcasting to client: {str(e)}")
+                disconnected_sockets.add(client)
         
         active_sockets.difference_update(disconnected_sockets)
 
@@ -202,7 +206,18 @@ class GameService:
                 }
             })
         except HTTPException as e:
-            await websocket.send_json({"type": "error", "message": str(e.detail)})
+            if websocket.client_state == WebSocketState.CONNECTED:
+                try:
+                    await websocket.send_json({"type": "error", "message": str(e.detail)})
+                except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
+                    active_sockets.discard(websocket)
+        except Exception as e:
+            print(f"Error in handle_join_game: {str(e)}")
+            if websocket.client_state == WebSocketState.CONNECTED:
+                try:
+                    await websocket.send_json({"type": "error", "message": "Internal server error"})
+                except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
+                    active_sockets.discard(websocket)
 
     async def handle_make_move(self, websocket: WebSocket, game_id: str, user_id: str, move_data: Dict[str, Any], active_sockets: Set[WebSocket]) -> None:
         try:
@@ -225,7 +240,18 @@ class GameService:
                 }
             })
         except HTTPException as e:
-            await websocket.send_json({"type": "error", "message": str(e.detail)})
+            if websocket.client_state == WebSocketState.CONNECTED:
+                try:
+                    await websocket.send_json({"type": "error", "message": str(e.detail)})
+                except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
+                    active_sockets.discard(websocket)
+        except Exception as e:
+            print(f"Error in handle_make_move: {str(e)}")
+            if websocket.client_state == WebSocketState.CONNECTED:
+                try:
+                    await websocket.send_json({"type": "error", "message": "Internal server error"})
+                except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
+                    active_sockets.discard(websocket)
 
     async def handle_leave(self, game_id: str, user_id: str, active_sockets: Set[WebSocket]) -> None:
         self.remove_watcher(game_id, user_id)
@@ -237,7 +263,7 @@ class GameService:
 
     def make_move(self, game_id: str, move: GameMove) -> GameState:
         game = self._get_game_or_404(game_id)
-        self._validate_move(game, move)
+        validate_move(game, move)
         
         player = next((p for p in game.players if p.id == move.playerId), None)
         if not player:
@@ -259,14 +285,14 @@ class GameService:
         if board_winner and board_winner != PlayerSymbol.T:
             game.global_board[move.global_board_index] = [board_winner] * 9
         
-        final_winner = self._check_global_winner(game.global_board)
+        final_winner = check_global_winner(game.global_board)
         game.active_board = find_next_active_board(move.local_board_index, game.global_board, final_winner)
         game.last_move_timestamp = datetime.now()
         game.winner = final_winner
         
         with get_db() as db:
             game_db = db.query(GameDB).filter(GameDB.id == game_id).first()
-            game_db.global_board = self._convert_global_board_to_db(game.global_board)
+            game_db.global_board = convert_global_board_to_db(game.global_board)
             game_db.current_player = game.current_player
             game_db.active_board = game.active_board
             game_db.winner = game.winner
@@ -303,8 +329,9 @@ class GameService:
                         player = existing_player_in_game
 
                     if player.status == PlayerStatus.PLAYER:
-                        game.current_player = player.symbol
-                        game_db.current_player = player.symbol
+                        if not game.current_player:
+                            game.current_player = player.symbol
+                            game_db.current_player = player.symbol
                     
                     db.commit()
 
@@ -342,8 +369,9 @@ class GameService:
                     game.players.append(player)
 
                     if player.status == PlayerStatus.PLAYER:
-                        game.current_player = player.symbol
-                        game_db.current_player = player.symbol
+                        if not game.current_player:
+                            game.current_player = player.symbol
+                            game_db.current_player = player.symbol
                     
                     db.commit()
 
@@ -388,8 +416,9 @@ class GameService:
                 game.players.append(player)
                 
                 if active_players_count + 1 == 2:
-                    game.current_player = PlayerSymbol.X
-                    game_db.current_player = PlayerSymbol.X
+                    if not game.current_player:
+                        game.current_player = PlayerSymbol.X
+                        game_db.current_player = PlayerSymbol.X
             else:
                 player = Player(
                     id=user_id,
@@ -408,59 +437,13 @@ class GameService:
                 game.players.append(player)
 
             if player.status == PlayerStatus.PLAYER:
-                game.current_player = player.symbol
-                game_db.current_player = player.symbol
+                if not game.current_player:
+                    game.current_player = player.symbol
+                    game_db.current_player = player.symbol
             
             db.commit()
             return player
-    
-    def _validate_move(self, game: GameState, move: GameMove):
-        if game.winner:
-            raise HTTPException(status_code=400, detail="Game already won")
 
-        cell_value = game.global_board[move.global_board_index][move.local_board_index]
-        if cell_value is not None and cell_value != "":
-            raise HTTPException(status_code=400, detail="Cell already occupied")
-
-        if game.active_board is not None and move.global_board_index != game.active_board:
-            raise HTTPException(status_code=400, detail="Invalid board selected")
-
-    def _check_global_winner(self, global_board):
-        local_board_winners = []
-        incomplete_boards = 0
-        x_wins = 0
-        o_wins = 0
-        
-        for local_board in global_board:
-            if None in local_board:
-                incomplete_boards += 1
-                local_board_winners.append(None)
-                continue
-                
-            winner = check_board_winner(local_board)
-            local_board_winners.append(winner)
-            
-            if winner == PlayerSymbol.X:
-                x_wins += 1
-            elif winner == PlayerSymbol.O:
-                o_wins += 1
-        
-        remaining_possible_wins = incomplete_boards
-        if x_wins > o_wins + remaining_possible_wins:
-            return PlayerSymbol.X
-        if o_wins > x_wins + remaining_possible_wins:
-            return PlayerSymbol.O
-            
-        if incomplete_boards == 0:
-            if x_wins > o_wins:
-                return PlayerSymbol.X
-            elif o_wins > x_wins:
-                return PlayerSymbol.O
-            else:
-                return PlayerSymbol.T
-                
-        return None
-    
     async def check_player_timeouts(self):
         for game_id, game in list(self.games.items()):
             if game.mode != GameMode.REMOTE:
@@ -484,27 +467,36 @@ class GameService:
 
 
     def remove_watcher(self, game_id: str, user_id: str):
+        print("Removing player")
         game = self._get_game_or_404(game_id)
-        
+
         with get_db() as db:
             game_db = db.query(GameDB).filter(GameDB.id == game_id).first()
             if not game_db:
                 raise HTTPException(status_code=404, detail="Game not found")
-            
-            player = next((p for p in game.players if p.id == user_id), None)
-            if not player:
-                return
-            
-            if game.watchers_count > 0 and player.status == PlayerStatus.WATCHER:
-                game.watchers_count -= 1
-                game.players = [p for p in game.players if p.id != user_id]
-                
-                game_db.watchers_count = game.watchers_count
-                player_db = db.query(PlayerDB).filter(PlayerDB.id == user_id).first()
-                if player_db:
-                    db.delete(player_db)
-                
-                self._cleanup_empty_game(game_id, db)
-                db.commit()
+
+            game.players = [p for p in game.players if p.id != user_id]
+
+            player_db = db.query(PlayerDB).filter(PlayerDB.id == user_id).first()
+            if player_db:
+                db.delete(player_db)
+
+            remaining_players = db.query(PlayerDB).filter(PlayerDB.game_id == game_id).count()
+            if remaining_players == 0:
+                if game_id in self.games:
+                    del self.games[game_id]
+                db.delete(game_db)
+
+            db.commit()
+
+    def remove_player(self, game_id: str, user_id: str) -> None:
+        with get_db() as db:
+            remove_player_from_game(db, self.games, game_id, user_id)
+            db.commit()
+
+    async def cleanup_inactive_games(self) -> None:
+        with get_db() as db:
+            cleanup_inactive_games(db, self.games)
+            db.commit()
 
 game_service = GameService()
