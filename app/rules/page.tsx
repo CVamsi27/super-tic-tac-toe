@@ -57,7 +57,7 @@ export default function RulesPage() {
             <ul className="list-disc pl-6 space-y-2">
               <li>
                 If a small board ends in a draw, it does not count toward any
-                player's victory.
+                player&apos;s victory.
               </li>
               <li>
                 If all boards are full and no player has won, the game is a
