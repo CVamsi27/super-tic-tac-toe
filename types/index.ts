@@ -18,7 +18,6 @@ export type GameBoardType = z.infer<typeof GameBoardSchema>;
 export enum GameModeType {
   REMOTE = "remote",
   AI = "ai",
-  RULES = "rules",
 }
 
 export enum WebSocketStatus {

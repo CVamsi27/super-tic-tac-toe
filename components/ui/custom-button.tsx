@@ -10,13 +10,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+          "bg-primary text-primary-foreground shadow hover:bg-primary-foreground hover:text-primary",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive-foreground hover:text-destructive",
         outline:
           "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary-foreground hover:text-secondary",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },
@@ -55,3 +55,27 @@ const CustomButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
 CustomButton.displayName = "Button";
 
 export { CustomButton, buttonVariants };
+
+const linkVariants = cva(
+  "font-semibold transition-colors rounded-lg text-center px-4 py-2",
+  {
+    variants: {
+      variant: {
+        default:
+          "bg-primary text-secondary hover:bg-secondary hover:text-primary",
+        inverted:
+          "bg-secondary text-primary hover:text-secondary hover:bg-primary",
+      },
+      size: {
+        default: "text-xl",
+        sm: "text-md",
+        lg: "text-2xl",
+        icon: "h-9 w-9",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  },
+);
