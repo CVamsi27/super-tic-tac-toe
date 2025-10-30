@@ -31,6 +31,7 @@ class GameService:
     def __init__(self):
         self.games: Dict[str, GameState] = {}
         self.active_websockets: Dict[str, List[WebSocket]] = {}
+        self.reset_in_progress: Set[str] = set()  # Track games currently being reset
 
     def _game_db_to_state(self, game_db: GameDB) -> GameState:
         players = [
@@ -132,50 +133,60 @@ class GameService:
             return game_exists
 
     def reset_game(self, game_id: str, user_id: str) -> dict:
+        # Prevent duplicate reset requests for the same game
+        if game_id in self.reset_in_progress:
+            raise HTTPException(status_code=409, detail="Game reset is already in progress")
+        
         if user_id not in [p.id for p in self.games[game_id].players if p.status == PlayerStatus.PLAYER]:
             raise HTTPException(status_code=403, detail="Only players can reset the game")
         
-        if game_id not in self.games:
+        self.reset_in_progress.add(game_id)
+        
+        try:
+            if game_id not in self.games:
+                with get_db() as db:
+                    game_db = db.query(GameDB).filter(GameDB.id == game_id).first()
+                    if not game_db:
+                        raise HTTPException(status_code=404, detail="Game not found")
+                    self.games[game_id] = self._game_db_to_state(game_db)
+            
+            old_game = self.games[game_id]
+            
+            # Determine the current player for the new game
+            # If there was a winner, set current_player to the winner
+            # Otherwise, set it to the first player (X)
+            new_current_player = old_game.winner if old_game.winner and old_game.winner != PlayerSymbol.T else PlayerSymbol.X
+            
+            new_game = GameState(
+                id=old_game.id,
+                mode=old_game.mode,
+                current_player=new_current_player
+            )
+            
+            self.games[game_id] = new_game
+            
             with get_db() as db:
                 game_db = db.query(GameDB).filter(GameDB.id == game_id).first()
-                if not game_db:
-                    raise HTTPException(status_code=404, detail="Game not found")
-                self.games[game_id] = self._game_db_to_state(game_db)
-        
-        old_game = self.games[game_id]
-        
-        # Determine the current player for the new game
-        # If there was a winner, set current_player to the winner
-        # Otherwise, set it to the first player (X)
-        new_current_player = old_game.winner if old_game.winner and old_game.winner != PlayerSymbol.T else PlayerSymbol.X
-        
-        new_game = GameState(
-            id=old_game.id,
-            mode=old_game.mode,
-            current_player=new_current_player
-        )
-        
-        self.games[game_id] = new_game
-        
-        with get_db() as db:
-            game_db = db.query(GameDB).filter(GameDB.id == game_id).first()
+                
+                game_db.global_board = convert_global_board_to_db(new_game.global_board)
+                game_db.current_player = new_current_player
+                game_db.active_board = None
+                game_db.watchers_count = 0
+                game_db.winner = None
+                game_db.last_move_timestamp = None
+                game_db.move_count = 0
+                
+                db.query(PlayerDB).filter(PlayerDB.game_id == game_id).delete()
+                
+                db.commit()
             
-            game_db.global_board = convert_global_board_to_db(new_game.global_board)
-            game_db.current_player = new_current_player
-            game_db.active_board = None
-            game_db.watchers_count = 0
-            game_db.winner = None
-            game_db.last_move_timestamp = None
-            game_db.move_count = 0
-            
-            db.query(PlayerDB).filter(PlayerDB.game_id == game_id).delete()
-            
-            db.commit()
-        
-        return {
-            "success": True,
-            "message": "Game reset successfully"
-        }
+            return {
+                "success": True,
+                "message": "Game reset successfully"
+            }
+        finally:
+            # Always remove the game from reset_in_progress, even if there's an error
+            self.reset_in_progress.discard(game_id)
 
     async def broadcast_to_game(self, active_sockets: Set[WebSocket], message: Dict[str, Any]) -> None:
         disconnected_sockets = set()
@@ -287,9 +298,25 @@ class GameService:
                     "current_player": self.games[game_id].current_player
                 }
             })
+        except HTTPException as e:
+            print(f"HTTP Error in handle_reset_game: {str(e.detail)}")
+            # Send error message to requester only
+            for client in list(active_sockets):
+                if client.client_state == WebSocketState.CONNECTED:
+                    try:
+                        await client.send_json({"type": "error", "message": str(e.detail)})
+                        break  # Only send to first connected client (the requester)
+                    except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
+                        pass
         except Exception as e:
             print(f"Error in handle_reset_game: {str(e)}")
-            raise
+            # Send generic error message to all connected clients
+            for client in list(active_sockets):
+                if client.client_state == WebSocketState.CONNECTED:
+                    try:
+                        await client.send_json({"type": "error", "message": "Failed to reset game"})
+                    except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
+                        pass
 
     def make_move(self, game_id: str, move: GameMove) -> GameState:
         game = self._get_game_or_404(game_id)
