@@ -19,6 +19,12 @@ services:
         scope: service
         value: 3.10.0
 
+databases:
+  - name: super-tic-tac-toe-db
+    databaseName: super_tic_tac_toe
+    plan: free
+    postgresVersion: 15
+
 envVarGroups:
   - name: backend-config
     envVars:
