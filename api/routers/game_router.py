@@ -6,8 +6,8 @@ router = APIRouter()
 
 @router.post("/create-game")
 async def create_game(request: GameCreateRequest):
-    game = game_service.create_game(request.mode)
-    return {"game_id": game.id, "mode": game.mode}
+    game = game_service.create_game(request.mode, request.ai_difficulty or "medium")
+    return {"game_id": game.id, "mode": game.mode, "ai_difficulty": game.ai_difficulty}
 
 @router.post("/reset-game")
 async def reset_game(request: GameResetRequest):
@@ -36,6 +36,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, user_id: str):
             handlers = {
                 'join_game': lambda: game_service.handle_join_game(websocket, game_id, user_id, game_service.active_websockets[game_id]),
                 'make_move': lambda: game_service.handle_make_move(websocket, game_id, user_id, data['move'], game_service.active_websockets[game_id]),
+                'reset_game': lambda: game_service.handle_reset_game(game_id, user_id, game_service.active_websockets[game_id]),
                 'leave': lambda: game_service.handle_leave(game_id, data['userId'], game_service.active_websockets[game_id])
             }
             

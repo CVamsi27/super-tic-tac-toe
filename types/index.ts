@@ -74,9 +74,11 @@ export const WebSocketMessageType = z.enum([
   "error",
   "player_joined",
   "game_update",
+  "game_reset",
   "watchers_update",
   "join_game",
   "make_move",
+  "reset_game",
   "leave",
 ]);
 
@@ -98,6 +100,12 @@ const MakeMoveMessageSchema = z.object({
 
 const LeaveMessageSchema = z.object({
   type: z.literal("leave"),
+  gameId: z.string(),
+  userId: z.string(),
+});
+
+const ResetGameMessageSchema = z.object({
+  type: z.literal("reset_game"),
   gameId: z.string(),
   userId: z.string(),
 });
@@ -143,13 +151,28 @@ const WatchersUpdateMessageSchema = z.object({
   watchers_count: z.number(),
 });
 
+const GameResetMessageSchema = z.object({
+  type: z.literal("game_reset"),
+  gameId: z.string(),
+  message: z.string(),
+  game_state: z.object({
+    global_board: GameBoardSchema,
+    active_board: z.number().nullable(),
+    move_count: z.number(),
+    winner: PlayerSymbol.nullable(),
+    current_player: PlayerSymbol.nullable(),
+  }),
+});
+
 export const WebSocketMessageSchema = z.discriminatedUnion("type", [
   JoinGameMessageSchema,
   MakeMoveMessageSchema,
   LeaveMessageSchema,
+  ResetGameMessageSchema,
   ErrorMessageSchema,
   PlayerJoinedMessageSchema,
   GameUpdateMessageSchema,
+  GameResetMessageSchema,
   WatchersUpdateMessageSchema,
 ]);
 

@@ -17,11 +17,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
-      <body className={`relative h-full font-sans antialiased`}>
+      <body className={`relative h-full font-sans antialiased bg-gradient-main`}>
         <Providers>
           <main className="relative flex flex-col h-full">
             <Navbar />
-            <div className="flex-grow flex-1 bg-background">{children}</div>
+            <div className="flex-grow flex-1 bg-gradient-main overflow-x-hidden">
+              {children}
+            </div>
             <Toaster />
             <Footer />
           </main>

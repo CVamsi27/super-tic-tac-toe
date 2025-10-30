@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from api.db.database import Base
 from api.db.models import GameDB, PlayerDB
+from api.db.user_models import UserDB, GameHistoryDB
 
 from dotenv import load_dotenv
 load_dotenv()

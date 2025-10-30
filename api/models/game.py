@@ -42,9 +42,11 @@ class GameState(BaseModel):
     last_move_timestamp: Optional[float] = None
     mode: Optional[GameMode]
     move_count: int = 0
+    ai_difficulty: Optional[str] = "medium"  # For AI games
 
 class GameCreateRequest(BaseModel):
     mode: GameMode = GameMode.REMOTE
+    ai_difficulty: Optional[str] = "medium"  # "easy", "medium", "hard" - only for AI mode
 
 class GameResetRequest(BaseModel):
     game_id: str

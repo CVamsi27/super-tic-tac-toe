@@ -104,8 +104,8 @@ class GameService:
                 
         return False
 
-    def create_game(self, mode: GameMode = GameMode.REMOTE) -> GameState:
-        game = GameState(mode=mode)
+    def create_game(self, mode: GameMode = GameMode.REMOTE, ai_difficulty: str = "medium") -> GameState:
+        game = GameState(mode=mode, ai_difficulty=ai_difficulty if mode == GameMode.AI else None)
         
         with get_db() as db:
             game_db = GameDB(

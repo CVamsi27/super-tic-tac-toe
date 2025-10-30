@@ -4,15 +4,19 @@ export const Footer = (): JSX.Element => {
   const d = new Date();
   const year = d.getFullYear();
   return (
-    <footer className="bottom-0 w-full flex flex-col md:flex-row justify-center gap-2 md:justify-center border-t-1 p-2">
-      <div className="flex flex-row gap-2 items-center justify-center h-full">
-        <div className="flex items-center gap-2">
-          <Copyright className="hover:text-primary-500" />
-          <span className="text-sm sm:text-base">{year}, Built with</span>
+    <footer className="w-full flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 border-t border-slate-200 dark:border-slate-700 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 smooth-transition mt-8">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
+        <div className="flex items-center gap-2 hover:scale-110 smooth-transition">
+          <Copyright className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600 dark:text-slate-400" />
+          <span className="text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+            {year} Built with
+          </span>
         </div>
-        <div className="flex gap-2 items-center">
-          <Heart className="text-red-500 hover:text-black" />
-          <span className="text-sm sm:text-base">by Vamsi Krishna</span>
+        <div className="flex gap-2 items-center hover:scale-110 smooth-transition">
+          <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 animate-pulse" />
+          <span className="text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+            by Vamsi Krishna
+          </span>
         </div>
       </div>
     </footer>

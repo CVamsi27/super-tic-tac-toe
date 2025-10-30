@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from fastapi import HTTPException
 from api.db.database import get_db
 from api.db.models import GameDB, PlayerDB
 from api.models.game import GameMove, GameState, PlayerStatus, PlayerSymbol
 
-def check_board_winner(board: List[PlayerSymbol | None]) -> PlayerSymbol | None:
+def check_board_winner(board: List[Optional[PlayerSymbol]]) -> Optional[PlayerSymbol]:
     win_patterns = [
         [0, 1, 2],
         [3, 4, 5],
@@ -32,9 +32,9 @@ def check_board_winner(board: List[PlayerSymbol | None]) -> PlayerSymbol | None:
 
 def find_next_active_board(
     current_cell_index: int, 
-    current_global_board: List[List[PlayerSymbol | None]],
-    final_winner: PlayerSymbol | None
-) -> int | None:
+    current_global_board: List[List[Optional[PlayerSymbol]]],
+    final_winner: Optional[PlayerSymbol]
+) -> Optional[int]:
     if final_winner is not None:
         return None
 
@@ -48,7 +48,7 @@ def find_next_active_board(
     return current_cell_index
 
 def convert_global_board_to_db(board: List[List[Optional[PlayerSymbol]]]) -> List[str]:
-    return [str(cell) if cell else '' for row in board for cell in row]
+    return [cell.value if cell else '' for row in board for cell in row]
 
 def convert_global_board_from_db(board_data: List[str]) -> List[List[Optional[PlayerSymbol]]]:
     board = []
@@ -60,7 +60,7 @@ def convert_global_board_from_db(board_data: List[str]) -> List[List[Optional[Pl
         board.append(row)
     return board
 
-def validate_move(self, game: GameState, move: GameMove):
+def validate_move(game: GameState, move: GameMove):
     if game.winner:
         raise HTTPException(status_code=400, detail="Game already won")
 
@@ -71,7 +71,7 @@ def validate_move(self, game: GameState, move: GameMove):
     if game.active_board is not None and move.global_board_index != game.active_board:
         raise HTTPException(status_code=400, detail="Invalid board selected")
     
-def check_global_winner(self, global_board):
+def check_global_winner(global_board):
     local_board_winners = []
     incomplete_boards = 0
     x_wins = 0

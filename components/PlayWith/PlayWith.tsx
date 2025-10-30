@@ -52,26 +52,40 @@ const PlayWith = () => {
   };
 
   return (
-    <div className="flex flex-col justify-between h-full">
-      <div className="flex flex-col gap-8 mt-10">
-        {Object.entries(CHOOSE_GAME_TYPES).map(([key, value]) => (
-          <CustomButton
-            disabled={isLoading}
-            onClick={() =>
-              handleGameCreation(GameModeType[key as keyof typeof GameModeType])
-            }
+    <div className="flex flex-col justify-between h-full w-full gap-4 sm:gap-6">
+      <div className="flex flex-col gap-3 sm:gap-4 w-full">
+        {Object.entries(CHOOSE_GAME_TYPES).map(([key, value], index) => (
+          <div
             key={key}
+            className="animate-slideInUp"
+            style={{ animationDelay: `${index * 0.1}s` }}
           >
-            {isButtonLoading[GameModeType[key as keyof typeof GameModeType]] ? (
-              <Loading />
-            ) : null}
-            {value}
-          </CustomButton>
+            <CustomButton
+              disabled={isLoading}
+              onClick={() =>
+                handleGameCreation(
+                  GameModeType[key as keyof typeof GameModeType]
+                )
+              }
+              className="w-full"
+            >
+              {isButtonLoading[GameModeType[key as keyof typeof GameModeType]] ? (
+                <Loading />
+              ) : null}
+              {value}
+            </CustomButton>
+          </div>
         ))}
       </div>
-      <CustomLink className="mb-10" variant="inverted" href="/rules">
-        Rules
-      </CustomLink>
+      <div className="border-t border-slate-200 dark:border-slate-700 pt-4 animate-slideInUp">
+        <CustomLink
+          className="w-full justify-center text-center block"
+          variant="inverted"
+          href="/rules"
+        >
+          📖 View Rules
+        </CustomLink>
+      </div>
     </div>
   );
 };
