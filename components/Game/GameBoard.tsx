@@ -1,6 +1,6 @@
 "use client";
 import { GameBoardType, WebSocketMessage } from "@/types";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { SmallBoard } from "./SmallBoard";
 import { useGameStore } from "@/store/useGameStore";
 

@@ -42,22 +42,34 @@ export const useGameStore = create<GameStore>()(
         moveCount,
         winner,
         currentPlayer,
+        mode,
       ) =>
         set((state) => {
           const currentGame =
             state.games[gameId] || createInitialGameState(gameId);
+          
+          // Check if player already exists to avoid duplicates
+          const playerExists = playerDetails && currentGame.players.some(
+            (p) => p !== null && p.id === playerDetails.id
+          );
+          
+          const updatedPlayers = playerExists
+            ? currentGame.players
+            : [...(currentGame.players || []), playerDetails];
+          
           return {
             games: {
               ...state.games,
               [gameId]: {
                 ...currentGame,
-                players: [...(currentGame.players || []), playerDetails],
+                players: updatedPlayers,
                 watchers,
                 currentPlayer,
                 globalBoard,
                 activeBoard,
                 moveCount,
                 winner,
+                mode: mode || currentGame.mode,
               },
             },
           };

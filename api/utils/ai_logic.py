@@ -1,14 +1,20 @@
 """
-AI logic for Super Tic Tac Toe using Minimax algorithm.
+AI logic for Super Tic Tac Toe using intelligent strategy.
 Supports difficulty levels: easy, medium, hard
+
+Strategy:
+- Easy: Random moves with occasional smart plays
+- Medium: Mix of strategic and random moves
+- Hard: Optimal minimax-based play with alpha-beta pruning
 """
 
 from typing import List, Tuple, Optional
+from api.models.game import GameState, PlayerSymbol
 import random
 
 
 class AILogic:
-    """AI player for Super Tic Tac Toe using Minimax algorithm"""
+    """AI player for Super Tic Tac Toe"""
 
     def __init__(self, difficulty: str = "medium"):
         """
@@ -17,244 +23,323 @@ class AILogic:
         Args:
             difficulty: "easy", "medium", or "hard"
         """
-        self.difficulty = difficulty
-        self.max_depth = self._get_depth(difficulty)
-        self.ai_player = "O"  # AI is always O
-        self.human_player = "X"  # Human is always X
-
-    def _get_depth(self, difficulty: str) -> int:
-        """Get search depth based on difficulty"""
-        depths = {
-            "easy": 2,
-            "medium": 4,
-            "hard": 9,  # Full depth for perfect play
-        }
-        return depths.get(difficulty, 4)
+        self.difficulty = difficulty.lower()
+        self.ai_symbol = PlayerSymbol.O
+        self.human_symbol = PlayerSymbol.X
 
     def get_next_move(
-        self, board_state: dict, available_moves: List[Tuple[int, int]]
+        self, game: GameState, available_moves: List[Tuple[int, int]]
     ) -> Tuple[int, int]:
         """
-        Get the best next move for AI
+        Get the best next move for AI based on difficulty level.
         
         Args:
-            board_state: dict with keys like "(0,0)" containing "X", "O", or ""
-            available_moves: List of (row, col) tuples for available positions
+            game: Current game state
+            available_moves: List of (board_index, cell_index) tuples
             
         Returns:
-            (row, col) tuple for the best move
+            (board_index, cell_index) tuple for the best move
         """
+        if not available_moves:
+            raise ValueError("No available moves")
+        
         if self.difficulty == "easy":
-            # Random move for easy
-            return random.choice(available_moves)
+            return self._get_easy_move(game, available_moves)
+        elif self.difficulty == "medium":
+            return self._get_medium_move(game, available_moves)
+        else:  # hard
+            return self._get_hard_move(game, available_moves)
 
-        if self.difficulty == "medium":
-            # Minimax with reduced depth + some randomness
-            best_move = self._minimax_move(board_state, available_moves)
-            # Occasionally pick a random move for variety
-            if random.random() < 0.3:
-                return random.choice(available_moves)
-            return best_move
-
-        # Hard: Full minimax
-        return self._minimax_move(board_state, available_moves)
-
-    def _minimax_move(
-        self, board_state: dict, available_moves: List[Tuple[int, int]]
+    def _get_easy_move(
+        self, game: GameState, available_moves: List[Tuple[int, int]]
     ) -> Tuple[int, int]:
-        """Find best move using minimax"""
-        best_score = float("-inf")
-        best_move = available_moves[0]
+        """Easy mode: Mostly random with 30% chance of smart moves"""
+        if random.random() < 0.3:
+            smart_move = self._get_smart_move(game, available_moves)
+            if smart_move:
+                return smart_move
+        
+        return random.choice(available_moves)
 
+    def _get_medium_move(
+        self, game: GameState, available_moves: List[Tuple[int, int]]
+    ) -> Tuple[int, int]:
+        """Medium mode: 70% strategic, 30% random"""
+        if random.random() < 0.7:
+            smart_move = self._get_smart_move(game, available_moves)
+            if smart_move:
+                return smart_move
+        
+        return random.choice(available_moves)
+
+    def _get_hard_move(
+        self, game: GameState, available_moves: List[Tuple[int, int]]
+    ) -> Tuple[int, int]:
+        """Hard mode: Always make optimal moves using strategic analysis"""
+        # First, check for immediate wins or blocks
+        smart_move = self._get_smart_move(game, available_moves)
+        if smart_move:
+            return smart_move
+        
+        # Then use minimax for deep strategy
+        return self._get_minimax_move(game, available_moves)
+
+    def _get_smart_move(
+        self, game: GameState, available_moves: List[Tuple[int, int]]
+    ) -> Optional[Tuple[int, int]]:
+        """
+        Find immediate strategic moves in priority order:
+        1. Winning move (completes a board)
+        2. Blocking move (prevents opponent from winning)
+        3. Center of active board or global center
+        """
+        
+        # Priority 1: Look for winning moves
         for move in available_moves:
-            # Try this move
-            board_copy = board_state.copy()
-            board_copy[f"({move[0]},{move[1]})"] = self.ai_player
+            board_idx, cell_idx = move
+            board = game.global_board[board_idx]
+            
+            if self._is_winning_move(board, cell_idx, self.ai_symbol):
+                print(f"AI: Found winning move at board {board_idx}, cell {cell_idx}")
+                return move
+        
+        # Priority 2: Block opponent's winning move
+        for move in available_moves:
+            board_idx, cell_idx = move
+            board = game.global_board[board_idx]
+            
+            if self._is_blocking_move(board, cell_idx, self.human_symbol):
+                print(f"AI: Found blocking move at board {board_idx}, cell {cell_idx}")
+                return move
+        
+        # Priority 3: Prefer center positions
+        # If in specific board, prefer center of that board
+        center_moves = [m for m in available_moves if m[1] == 4]
+        if center_moves:
+            print(f"AI: Choosing center position {center_moves[0]}")
+            return center_moves[0]
+        
+        # Priority 4: Prefer corners (strong positions)
+        corner_moves = [m for m in available_moves if m[1] in [0, 2, 6, 8]]
+        if corner_moves:
+            print(f"AI: Choosing corner position {corner_moves[0]}")
+            return corner_moves[0]
+        
+        return None
 
-            score = self._minimax(board_copy, 0, False, available_moves)
-
+    def _get_minimax_move(
+        self, game: GameState, available_moves: List[Tuple[int, int]]
+    ) -> Tuple[int, int]:
+        """Use minimax algorithm to find optimal move"""
+        best_move = available_moves[0]
+        best_score = float('-inf')
+        
+        for move in available_moves:
+            # Evaluate each move
+            game_copy = self._copy_game(game)
+            game_copy.global_board[move[0]][move[1]] = self.ai_symbol
+            
+            score = self._minimax(game_copy, depth=2, is_maximizing=False)
+            
             if score > best_score:
                 best_score = score
                 best_move = move
-
+        
+        print(f"AI: Minimax move: {best_move} with score {best_score}")
         return best_move
 
     def _minimax(
-        self,
-        board_state: dict,
-        depth: int,
+        self, 
+        game: GameState, 
+        depth: int, 
         is_maximizing: bool,
-        all_available_moves: List[Tuple[int, int]],
-    ) -> int:
+        alpha: float = float('-inf'),
+        beta: float = float('inf')
+    ) -> float:
         """
-        Minimax algorithm with alpha-beta pruning
+        Minimax with alpha-beta pruning.
+        Evaluates positions up to specified depth.
+        """
         
-        Args:
-            board_state: Current board state
-            depth: Current search depth
-            is_maximizing: True if maximizing (AI), False if minimizing (human)
-            all_available_moves: List of all possible moves in the game
-            
-        Returns:
-            Score of the position
-        """
         # Check terminal states
-        winner = self._check_winner(board_state)
-        if winner == self.ai_player:
-            return 10 - depth  # Prefer faster wins
-        if winner == self.human_player:
-            return depth - 10  # Prefer slower losses
-        if self._is_board_full(board_state):
-            return 0  # Draw
-
-        # Stop at depth limit
-        if depth >= self.max_depth:
-            return self._evaluate_board(board_state)
-
-        # Get available moves in this state
-        available = self._get_available_moves(board_state)
-        if not available:
+        winner = self._get_game_winner(game)
+        if winner == self.ai_symbol:
+            return 100 + depth
+        elif winner == self.human_symbol:
+            return -100 - depth
+        elif winner == PlayerSymbol.T:  # Tie
             return 0
-
+        
+        # Depth limit - evaluate position
+        if depth == 0:
+            return self._evaluate_position(game)
+        
+        # Get available moves
+        available = self._get_available_moves_static(game)
+        if not available:
+            return self._evaluate_position(game)
+        
         if is_maximizing:
-            max_score = float("-inf")
+            # AI's turn - maximize score
+            max_eval = float('-inf')
             for move in available:
-                board_copy = board_state.copy()
-                board_copy[f"({move[0]},{move[1]})"] = self.ai_player
-                score = self._minimax(board_copy, depth + 1, False, all_available_moves)
-                max_score = max(score, max_score)
-            return max_score
+                game_copy = self._copy_game(game)
+                game_copy.global_board[move[0]][move[1]] = self.ai_symbol
+                eval_score = self._minimax(game_copy, depth - 1, False, alpha, beta)
+                max_eval = max(max_eval, eval_score)
+                alpha = max(alpha, eval_score)
+                if beta <= alpha:
+                    break  # Pruning
+            return max_eval
         else:
-            min_score = float("inf")
+            # Human's turn - minimize score
+            min_eval = float('inf')
             for move in available:
-                board_copy = board_state.copy()
-                board_copy[f"({move[0]},{move[1]})"] = self.human_player
-                score = self._minimax(board_copy, depth + 1, True, all_available_moves)
-                min_score = min(score, min_score)
-            return min_score
+                game_copy = self._copy_game(game)
+                game_copy.global_board[move[0]][move[1]] = self.human_symbol
+                eval_score = self._minimax(game_copy, depth - 1, True, alpha, beta)
+                min_eval = min(min_eval, eval_score)
+                beta = min(beta, eval_score)
+                if beta <= alpha:
+                    break  # Pruning
+            return min_eval
 
-    def _check_winner(self, board_state: dict) -> Optional[str]:
-        """Check if there's a winner"""
-        # Check rows
-        for row in range(3):
-            if all(
-                board_state.get(f"({row},{col})", "") == "X"
-                for col in range(3)
-            ):
-                return "X"
-            if all(
-                board_state.get(f"({row},{col})", "") == "O"
-                for col in range(3)
-            ):
-                return "O"
-
-        # Check columns
-        for col in range(3):
-            if all(
-                board_state.get(f"({row},{col})", "") == "X"
-                for row in range(3)
-            ):
-                return "X"
-            if all(
-                board_state.get(f"({row},{col})", "") == "O"
-                for row in range(3)
-            ):
-                return "O"
-
-        # Check diagonals
-        if all(
-            board_state.get(f"({i},{i})", "") == "X" for i in range(3)
-        ):
-            return "X"
-        if all(
-            board_state.get(f"({i},{i})", "") == "O" for i in range(3)
-        ):
-            return "O"
-
-        if all(
-            board_state.get(f"({i},{2-i})", "") == "X"
-            for i in range(3)
-        ):
-            return "X"
-        if all(
-            board_state.get(f"({i},{2-i})", "") == "O"
-            for i in range(3)
-        ):
-            return "O"
-
-        return None
-
-    def _is_board_full(self, board_state: dict) -> bool:
-        """Check if board is full"""
-        empty_count = sum(
-            1
-            for val in board_state.values()
-            if val == ""
-        )
-        return empty_count == 0
-
-    def _get_available_moves(self, board_state: dict) -> List[Tuple[int, int]]:
-        """Get list of available moves"""
-        moves = []
-        for row in range(3):
-            for col in range(3):
-                if board_state.get(f"({row},{col})", "") == "":
-                    moves.append((row, col))
-        return moves
-
-    def _evaluate_board(self, board_state: dict) -> int:
-        """Heuristic evaluation of board position"""
+    def _evaluate_position(self, game: GameState) -> float:
+        """Evaluate a board position without terminal state"""
         score = 0
-
-        # Check for winning patterns
-        for row in range(3):
-            score += self._evaluate_line(
-                [
-                    board_state.get(f"({row},{col})", "")
-                    for col in range(3)
-                ]
-            )
-
-        for col in range(3):
-            score += self._evaluate_line(
-                [
-                    board_state.get(f"({row},{col})", "")
-                    for row in range(3)
-                ]
-            )
-
-        # Diagonals
-        score += self._evaluate_line(
-            [board_state.get(f"({i},{i})", "") for i in range(3)]
-        )
-        score += self._evaluate_line(
-            [board_state.get(f"({i},{2-i})", "") for i in range(3)]
-        )
-
+        
+        # Evaluate each small board
+        for board_idx, board in enumerate(game.global_board):
+            board_score = self._evaluate_board(board)
+            score += board_score
+        
         return score
 
-    def _evaluate_line(self, line: List[str]) -> int:
-        """Evaluate a line (row/col/diagonal)"""
-        ai_count = line.count(self.ai_player)
-        human_count = line.count(self.human_player)
-        empty_count = line.count("")
+    def _evaluate_board(self, board: List[Optional[PlayerSymbol]]) -> float:
+        """Evaluate a single 3x3 board"""
+        score = 0
+        
+        win_patterns = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ]
+        
+        for pattern in win_patterns:
+            a, b, c = pattern
+            cells = [board[a], board[b], board[c]]
+            
+            ai_count = sum(1 for cell in cells if cell == self.ai_symbol)
+            human_count = sum(1 for cell in cells if cell == self.human_symbol)
+            empty_count = sum(1 for cell in cells if cell is None)
+            
+            # AI has 2, opponent 0, 1 empty: very strong
+            if ai_count == 2 and human_count == 0 and empty_count == 1:
+                score += 20
+            # AI has 1, opponent 0, 2 empty: somewhat strong
+            elif ai_count == 1 and human_count == 0 and empty_count == 2:
+                score += 2
+            # Opponent has 2, AI 0, 1 empty: very weak
+            elif human_count == 2 and ai_count == 0 and empty_count == 1:
+                score -= 20
+            # Opponent has 1, AI 0, 2 empty: somewhat weak
+            elif human_count == 1 and ai_count == 0 and empty_count == 2:
+                score -= 2
+        
+        return score
 
-        if ai_count > 0 and human_count > 0:
-            return 0  # Mixed, neutral
+    def _is_winning_move(
+        self, 
+        board: List[Optional[PlayerSymbol]], 
+        cell_idx: int,
+        symbol: PlayerSymbol
+    ) -> bool:
+        """Check if placing symbol at cell_idx wins this board"""
+        board_copy = board.copy()
+        board_copy[cell_idx] = symbol
+        return self._get_board_winner(board_copy) == symbol
 
-        if ai_count == 3:
-            return 10  # AI wins
-        if human_count == 3:
-            return -10  # Human wins
+    def _is_blocking_move(
+        self, 
+        board: List[Optional[PlayerSymbol]], 
+        cell_idx: int,
+        symbol: PlayerSymbol
+    ) -> bool:
+        """Check if placing opponent's symbol at cell_idx would win"""
+        board_copy = board.copy()
+        board_copy[cell_idx] = symbol
+        return self._get_board_winner(board_copy) == symbol
 
-        if ai_count == 2 and empty_count == 1:
-            return 5  # AI close to winning
-        if human_count == 2 and empty_count == 1:
-            return -5  # Human close to winning
+    def _get_board_winner(
+        self, board: List[Optional[PlayerSymbol]]
+    ) -> Optional[PlayerSymbol]:
+        """Get the winner of a single 3x3 board"""
+        win_patterns = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ]
+        
+        for pattern in win_patterns:
+            a, b, c = pattern
+            if (board[a] is not None and 
+                board[a] == board[b] and 
+                board[a] == board[c]):
+                return board[a]
+        
+        if all(cell is not None for cell in board):
+            return PlayerSymbol.T  # Tie
+        
+        return None
 
-        if ai_count == 1 and empty_count == 2:
-            return 1
-        if human_count == 1 and empty_count == 2:
-            return -1
+    def _get_game_winner(self, game: GameState) -> Optional[PlayerSymbol]:
+        """Determine winner of the entire super tic-tac-toe game"""
+        board_winners = []
+        for board in game.global_board:
+            winner = self._get_board_winner(board)
+            board_winners.append(winner)
+        
+        x_wins = sum(1 for w in board_winners if w == PlayerSymbol.X)
+        o_wins = sum(1 for w in board_winners if w == PlayerSymbol.O)
+        empty_boards = sum(1 for w in board_winners if w is None)
+        
+        # Check meta game winner
+        if x_wins > o_wins + empty_boards:
+            return PlayerSymbol.X
+        elif o_wins > x_wins + empty_boards:
+            return PlayerSymbol.O
+        elif empty_boards == 0:
+            if x_wins > o_wins:
+                return PlayerSymbol.X
+            elif o_wins > x_wins:
+                return PlayerSymbol.O
+            else:
+                return PlayerSymbol.T
+        
+        return None
 
-        return 0
+    def _get_available_moves_static(
+        self, game: GameState
+    ) -> List[Tuple[int, int]]:
+        """Get all available moves in a game state"""
+        moves = []
+        
+        if game.active_board is not None:
+            # Specific board is active
+            board = game.global_board[game.active_board]
+            for cell_idx, cell in enumerate(board):
+                if cell is None:
+                    moves.append((game.active_board, cell_idx))
+        else:
+            # Any board with space is valid
+            for board_idx, board in enumerate(game.global_board):
+                for cell_idx, cell in enumerate(board):
+                    if cell is None:
+                        moves.append((board_idx, cell_idx))
+        
+        return moves
+
+    def _copy_game(self, game: GameState) -> GameState:
+        """Create a deep copy of game state"""
+        from copy import deepcopy
+        return deepcopy(game)

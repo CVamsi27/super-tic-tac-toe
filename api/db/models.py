@@ -10,6 +10,7 @@ class GameDB(Base):
     
     id = Column(String, primary_key=True)
     mode = Column(Enum(GameMode))
+    ai_difficulty = Column(String, nullable=True)
     current_player = Column(Enum(PlayerSymbol), nullable=True)
     active_board = Column(Integer, nullable=True)
     watchers_count = Column(Integer, default=0)

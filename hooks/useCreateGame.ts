@@ -8,20 +8,21 @@ import { useMutation } from "react-query";
 export const useCreateGame = () => {
   const { games } = useGameStore();
 
-  const createGame = async (mode: GameModeType): Promise<GameData> => {
+  const createGame = async (mode: GameModeType, ai_difficulty: string = "medium"): Promise<GameData> => {
     const response = await fetch(`/api/py/game/create-game`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ mode }),
+      body: JSON.stringify({ mode, ai_difficulty }),
     });
     const data = await response.json();
     return GameSchema.parse(data);
   };
 
   const { mutate, data, isLoading, error, reset } = useMutation({
-    mutationFn: (mode: GameModeType) => createGame(mode),
+    mutationFn: (options: { mode: GameModeType; ai_difficulty?: string }) => 
+      createGame(options.mode, options.ai_difficulty || "medium"),
     retry: 0,
   });
 

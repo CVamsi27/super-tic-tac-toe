@@ -68,6 +68,7 @@ export const useGameSocket = (gameId: string, userId: string) => {
               message.game_state.move_count,
               message.game_state.winner,
               message.game_state.current_player,
+              message.mode,
             );
             break;
 

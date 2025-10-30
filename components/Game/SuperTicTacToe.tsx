@@ -12,22 +12,38 @@ import { useGameSocket } from "@/hooks/useGameWebSocket";
 const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
   const { gameId } = useParams<{ gameId: string }>();
   const { gameState, sendMessage } = useGameSocket(gameId, userId);
+  const isAIGame = gameState?.mode === "ai";
+  
   return (
     <div
       className={`flex flex-col items-center justify-center bg-gradient-main min-h-screen p-3 sm:p-4 md:p-6 overflow-x-auto smooth-transition gap-4`}
     >
-      {/* Copy URL Button - Top Section */}
-      <div className="w-fit max-w-4xl animate-slideInDown">
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 rounded-xl border border-blue-100 dark:border-slate-600 shadow-md">
-          <p className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">
-            📤 Share this game:
-          </p>
-          <CopyGameUrl gameId={gameId} />
-          <p className="text-xs text-slate-600 dark:text-slate-400">
-            First to join becomes player 2, others watch
-          </p>
+      {/* Copy URL Button - Top Section (Only for Remote games) */}
+      {!isAIGame && (
+        <div className="w-fit max-w-4xl animate-slideInDown">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 rounded-xl border border-blue-100 dark:border-slate-600 shadow-md">
+            <p className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">
+              📤 Share this game:
+            </p>
+            <CopyGameUrl gameId={gameId} />
+            <p className="text-xs text-slate-600 dark:text-slate-400">
+              First to join becomes player 2, others watch
+            </p>
+          </div>
         </div>
-      </div>
+      )}
+      
+      {/* AI Game Indicator */}
+      {isAIGame && (
+        <div className="w-fit max-w-4xl animate-slideInDown">
+          <div className="flex items-center justify-center gap-2 p-3 sm:p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl border border-purple-200 dark:border-purple-700 shadow-md">
+            <span className="text-2xl">🤖</span>
+            <p className="text-sm sm:text-base font-semibold text-purple-700 dark:text-purple-300">
+              Playing against AI
+            </p>
+          </div>
+        </div>
+      )}
 
       <Card className="w-fit max-w-4xl p-3 sm:p-4 md:p-6 shadow-2xl border-0 bg-gradient-card animate-scaleIn">
         <CardHeader className="py-2 sm:py-3">

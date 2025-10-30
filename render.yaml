@@ -7,30 +7,20 @@ services:
     startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
-        scope: service
-        value: ${DATABASE_URL}
+        sync: false
       - key: SECRET_KEY
-        scope: service
-        value: ${SECRET_KEY}
+        sync: false
       - key: GOOGLE_CLIENT_ID
-        scope: service
-        value: ${GOOGLE_CLIENT_ID}
+        sync: false
       - key: PYTHON_VERSION
-        scope: service
         value: 3.10.0
-
-databases:
-  - name: super-tic-tac-toe-db
-    databaseName: super_tic_tac_toe
-    plan: free
-    postgresVersion: 15
 
 envVarGroups:
   - name: backend-config
     envVars:
       - key: DATABASE_URL
-        value: ${super-tic-tac-toe-db.DATABASE_URL}
+        sync: false
       - key: SECRET_KEY
-        generateValue: true
+        sync: false
       - key: GOOGLE_CLIENT_ID
-        value: your_google_client_id_here
+        sync: false

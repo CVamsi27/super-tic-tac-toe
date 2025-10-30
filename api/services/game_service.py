@@ -26,6 +26,7 @@ from api.utils.game_logic import (
     cleanup_inactive_games
 )
 from api.services.auth_service import auth_service
+from api.utils.ai_logic import AILogic
 
 class GameService:
     def __init__(self):
@@ -53,7 +54,8 @@ class GameService:
             winner=game_db.winner,
             last_move_timestamp=game_db.last_move_timestamp.timestamp() if game_db.last_move_timestamp else None,
             mode=game_db.mode,
-            move_count=game_db.move_count
+            move_count=game_db.move_count,
+            ai_difficulty=game_db.ai_difficulty if hasattr(game_db, 'ai_difficulty') else "medium"
         )
 
     def _get_game_or_404(self, game_id: str) -> GameState:
@@ -111,6 +113,7 @@ class GameService:
             game_db = GameDB(
                 id=game.id,
                 mode=mode,
+                ai_difficulty=ai_difficulty if mode == GameMode.AI else None,
                 global_board=convert_global_board_to_db(game.global_board)
             )
             db.add(game_db)
@@ -208,7 +211,16 @@ class GameService:
 
     async def handle_join_game(self, websocket: WebSocket, game_id: str, user_id: str, active_sockets: Set[WebSocket]) -> None:
         try:
+            game = self.games.get(game_id)
+            if not game:
+                # Game not in memory, will be loaded by join_game
+                players_before = 0
+            else:
+                players_before = len(game.players)
+            
             player = self.join_game(game_id, user_id)
+            
+            # Send player_joined for the human player
             await self.broadcast_to_game(active_sockets, {
                 "type": "player_joined",
                 "gameId": game_id,
@@ -216,6 +228,8 @@ class GameService:
                 "symbol": player.symbol,
                 "status": player.status,
                 "watchers_count": self.games[game_id].watchers_count,
+                "mode": self.games[game_id].mode,
+                "ai_difficulty": self.games[game_id].ai_difficulty,
                 "game_state": {
                     "global_board": self.games[game_id].global_board,
                     "active_board": self.games[game_id].active_board,
@@ -224,6 +238,37 @@ class GameService:
                     "current_player": self.games[game_id].current_player
                 }
             })
+            
+            # For AI games, always broadcast AI player if it exists (so frontend knows about it)
+            game = self.games[game_id]  # Refresh game reference
+            print(f"AI Game check: mode={game.mode}, players_before={players_before}, players_now={len(game.players)}")
+            print(f"All players: {[(p.id, p.symbol) for p in game.players]}")
+            
+            if game.mode == GameMode.AI:
+                # Find AI player
+                ai_player = next((p for p in game.players if p.id.startswith("ai_")), None)
+                print(f"AI Player found: {ai_player.id if ai_player else 'None'}")
+                
+                # Broadcast AI player if it exists and this is a new connection (not already in player list)
+                if ai_player and ai_player.id != player.id:
+                    await self.broadcast_to_game(active_sockets, {
+                        "type": "player_joined",
+                        "gameId": game_id,
+                        "userId": ai_player.id,
+                        "symbol": ai_player.symbol,
+                        "status": ai_player.status,
+                        "watchers_count": self.games[game_id].watchers_count,
+                        "mode": self.games[game_id].mode,
+                        "ai_difficulty": self.games[game_id].ai_difficulty,
+                        "game_state": {
+                            "global_board": self.games[game_id].global_board,
+                            "active_board": self.games[game_id].active_board,
+                            "move_count": self.games[game_id].move_count,
+                            "winner": self.games[game_id].winner,
+                            "current_player": self.games[game_id].current_player
+                        }
+                    })
+                    print(f"Broadcasted AI player: {ai_player.id}")
         except HTTPException as e:
             if websocket.client_state == WebSocketState.CONNECTED:
                 try:
@@ -258,6 +303,11 @@ class GameService:
                     "current_player": game.current_player
                 }
             })
+            
+            # If it's an AI game and there's no winner, make AI move
+            if game.mode == GameMode.AI and game.winner is None:
+                await self._make_ai_move(game_id, active_sockets)
+                
         except HTTPException as e:
             if websocket.client_state == WebSocketState.CONNECTED:
                 try:
@@ -271,6 +321,71 @@ class GameService:
                     await websocket.send_json({"type": "error", "message": "Internal server error"})
                 except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
                     active_sockets.discard(websocket)
+
+    async def _make_ai_move(self, game_id: str, active_sockets: Set[WebSocket]) -> None:
+        """Generate and execute AI move in an AI game"""
+        import asyncio
+        
+        try:
+            # Add a small delay for better UX
+            await asyncio.sleep(0.5)
+            
+            game = self._get_game_or_404(game_id)
+            
+            # Make sure it's AI's turn and game not won
+            if game.winner is not None or game.current_player != PlayerSymbol.O:
+                print(f"AI move skipped: winner={game.winner}, current_player={game.current_player}")
+                return
+            
+            # Get available moves
+            available_moves = []
+            if game.active_board is not None:
+                board = game.global_board[game.active_board]
+                for cell_idx, cell in enumerate(board):
+                    if cell is None:
+                        available_moves.append((game.active_board, cell_idx))
+            else:
+                for board_idx, board in enumerate(game.global_board):
+                    for cell_idx, cell in enumerate(board):
+                        if cell is None:
+                            available_moves.append((board_idx, cell_idx))
+            
+            if not available_moves:
+                print("No available moves for AI")
+                return
+            
+            # Use AI logic to determine best move
+            ai_logic = AILogic(difficulty=game.ai_difficulty or "medium")
+            board_idx, cell_idx = ai_logic.get_next_move(game, available_moves)
+            
+            print(f"AI chose move: board={board_idx}, cell={cell_idx}")
+            
+            # Make the move
+            ai_player_id = f"ai_{game_id}"
+            ai_move = GameMove(
+                playerId=ai_player_id,
+                global_board_index=board_idx,
+                local_board_index=cell_idx
+            )
+            
+            game = self.make_move(game_id, ai_move)
+            
+            # Broadcast the AI move
+            await self.broadcast_to_game(active_sockets, {
+                "type": "game_update",
+                "gameId": game_id,
+                "userId": ai_player_id,
+                "game_state": {
+                    "global_board": game.global_board,
+                    "active_board": game.active_board,
+                    "move_count": game.move_count,
+                    "winner": game.winner,
+                    "current_player": game.current_player
+                }
+            })
+            
+        except Exception as e:
+            print(f"Error making AI move: {str(e)}")
 
     async def handle_leave(self, game_id: str, user_id: str, active_sockets: Set[WebSocket]) -> None:
         self.remove_watcher(game_id, user_id)
@@ -322,14 +437,45 @@ class GameService:
         game = self._get_game_or_404(game_id)
         validate_move(game, move)
         
+        print(f"Making move: playerId={move.playerId}, game mode={game.mode}")
+        print(f"Game players: {[(p.id, p.symbol) for p in game.players]}")
+        
         player = next((p for p in game.players if p.id == move.playerId), None)
         if not player:
             with get_db() as db:
                 player_db = db.query(PlayerDB).filter(PlayerDB.id == move.playerId).first()
                 if not player_db:
-                    raise HTTPException(status_code=404, detail="Player not found")
+                    # For AI games, AI player might not be in memory yet, but should be in DB
+                    if game.mode == GameMode.AI and move.playerId.startswith("ai_"):
+                        print(f"AI move attempted but player not found. Checking DB and game.players")
+                        # Try to find in game.players anyway
+                        ai_player = next((p for p in game.players if p.id.startswith("ai_")), None)
+                        if ai_player:
+                            player = ai_player
+                            print(f"Found AI player in game.players: {ai_player.id}")
+                        else:
+                            print(f"AI player {move.playerId} not found in game.players or DB")
+                            # Just create a temporary player object for the move
+                            player = Player(
+                                id=move.playerId,
+                                symbol=PlayerSymbol.O,  # AI is always O
+                                status=PlayerStatus.PLAYER,
+                                join_order=1
+                            )
+                            print(f"Created temporary AI player: {player.id}")
+                    else:
+                        raise HTTPException(status_code=404, detail="Player not found")
+                else:
+                    player = Player(
+                        id=player_db.id,
+                        symbol=player_db.symbol,
+                        status=player_db.status,
+                        join_order=player_db.join_order
+                    )
+                    print(f"Found player in DB: {player.id}")
                 db.commit()
-        elif player.status == PlayerStatus.WATCHER:
+        
+        if player and player.status == PlayerStatus.WATCHER:
             raise HTTPException(status_code=400, detail="Watcher cannot make moves")
             
         symbol = player.symbol
@@ -520,12 +666,13 @@ class GameService:
                     if not game.current_player:
                         game.current_player = PlayerSymbol.X
                         game_db.current_player = PlayerSymbol.X
-            else:
+            else:  # AI mode
+                # Human player always gets X
                 player = Player(
                     id=user_id,
-                    symbol=PlayerSymbol.X if not game.players else PlayerSymbol.O,
+                    symbol=PlayerSymbol.X,
                     status=PlayerStatus.PLAYER,
-                    join_order=len(game.players)
+                    join_order=0
                 )
                 player_db = PlayerDB(
                     id=player.id,
@@ -536,11 +683,29 @@ class GameService:
                 )
                 db.add(player_db)
                 game.players.append(player)
+                
+                # Automatically add AI player as O
+                if len(game.players) == 1:
+                    ai_player = Player(
+                        id=f"ai_{game_id}",
+                        symbol=PlayerSymbol.O,
+                        status=PlayerStatus.PLAYER,
+                        join_order=1
+                    )
+                    ai_player_db = PlayerDB(
+                        id=ai_player.id,
+                        game_id=game_id,
+                        symbol=ai_player.symbol,
+                        status=ai_player.status,
+                        join_order=ai_player.join_order
+                    )
+                    db.add(ai_player_db)
+                    game.players.append(ai_player)
 
             if player.status == PlayerStatus.PLAYER:
                 if not game.current_player:
-                    game.current_player = player.symbol
-                    game_db.current_player = player.symbol
+                    game.current_player = PlayerSymbol.X  # Always start with X
+                    game_db.current_player = PlayerSymbol.X
             
             db.commit()
             return player

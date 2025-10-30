@@ -56,6 +56,7 @@ export interface GameStore {
     moveCount: number,
     winner: PlayerType,
     currentPlayer: PlayerType,
+    mode?: GameModeType,
   ) => void;
   updateWatcher: (gameId: string, watchers: number) => void;
   updateGame: (
