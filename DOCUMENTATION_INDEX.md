@@ -121,6 +121,7 @@ Then follow [AI_TESTING_GUIDE.md](./AI_TESTING_GUIDE.md) to test locally.
 |------|---------|-----------|--------|
 | [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md) | Full deployment guide | 30 min | 📋 Complete |
 | [ENVIRONMENT_CONFIGURATION.md](./ENVIRONMENT_CONFIGURATION.md) | Environment setup | 20 min | 🔧 Complete |
+| [RENDER_YAML_GUIDE.md](./RENDER_YAML_GUIDE.md) | Render.yaml IaC deployment | 15 min | 🚀 NEW |
 | [AI_TESTING_GUIDE.md](./AI_TESTING_GUIDE.md) | AI testing procedures | 15 min | 🤖 Complete |
 
 ### Summary Documents
