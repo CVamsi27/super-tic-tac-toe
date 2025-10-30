@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Trophy, TrendingUp } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 
 interface LeaderboardUser {
   id: string;
@@ -56,20 +56,6 @@ export default function LeaderboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 py-4 sm:px-6">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold text-gradient">
-              🎮 Super Tic Tac Toe
-            </Link>
-            <Link href="/profile" className="text-sm text-slate-700 hover:text-blue-600 font-semibold">
-              My Profile
-            </Link>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6">
         {/* Header Card */}
