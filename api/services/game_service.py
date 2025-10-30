@@ -13,6 +13,7 @@ from api.models.game import (
     GameMode
 )
 from api.db.models import GameDB, PlayerDB
+from api.db.user_models import UserDB
 from api.db.database import get_db
 from api.utils.game_logic import (
     check_board_winner, 
@@ -24,6 +25,7 @@ from api.utils.game_logic import (
     remove_player_from_game,
     cleanup_inactive_games
 )
+from api.services.auth_service import auth_service
 
 class GameService:
     def __init__(self):
@@ -142,9 +144,15 @@ class GameService:
         
         old_game = self.games[game_id]
         
+        # Determine the current player for the new game
+        # If there was a winner, set current_player to the winner
+        # Otherwise, set it to the first player (X)
+        new_current_player = old_game.winner if old_game.winner and old_game.winner != PlayerSymbol.T else PlayerSymbol.X
+        
         new_game = GameState(
             id=old_game.id,
-            mode=old_game.mode
+            mode=old_game.mode,
+            current_player=new_current_player
         )
         
         self.games[game_id] = new_game
@@ -153,7 +161,7 @@ class GameService:
             game_db = db.query(GameDB).filter(GameDB.id == game_id).first()
             
             game_db.global_board = convert_global_board_to_db(new_game.global_board)
-            game_db.current_player = None
+            game_db.current_player = new_current_player
             game_db.active_board = None
             game_db.watchers_count = 0
             game_db.winner = None
@@ -261,6 +269,28 @@ class GameService:
             "watchers_count": self.games[game_id].watchers_count
         })
 
+    async def handle_reset_game(self, game_id: str, user_id: str, active_sockets: Set[WebSocket]) -> None:
+        """Handle reset game and broadcast to all connected clients"""
+        try:
+            reset_result = self.reset_game(game_id, user_id)
+            
+            # Broadcast the reset to all connected players and watchers
+            await self.broadcast_to_game(active_sockets, {
+                "type": "game_reset",
+                "gameId": game_id,
+                "message": reset_result["message"],
+                "game_state": {
+                    "global_board": self.games[game_id].global_board,
+                    "active_board": self.games[game_id].active_board,
+                    "move_count": self.games[game_id].move_count,
+                    "winner": self.games[game_id].winner,
+                    "current_player": self.games[game_id].current_player
+                }
+            })
+        except Exception as e:
+            print(f"Error in handle_reset_game: {str(e)}")
+            raise
+
     def make_move(self, game_id: str, move: GameMove) -> GameState:
         game = self._get_game_or_404(game_id)
         validate_move(game, move)
@@ -298,6 +328,50 @@ class GameService:
             game_db.winner = game.winner
             game_db.last_move_timestamp = datetime.now()
             game_db.move_count = game.move_count
+            
+            # Save game result if game is finished
+            if final_winner is not None:
+                game_duration = 0
+                if game.last_move_timestamp:
+                    # Calculate game duration (this is approximate, would need start_time for exact calc)
+                    game_duration = game.move_count * 5  # Rough estimate
+                
+                players = game.players
+                player_symbols = {p.id: p.symbol for p in players if p.symbol}
+                
+                # Save result for each player
+                for player_id, player_symbol in player_symbols.items():
+                    if final_winner == PlayerSymbol.T:
+                        # Draw
+                        result = 'DRAW'
+                        points = 1
+                    elif final_winner == player_symbol:
+                        # Player won
+                        result = 'WIN'
+                        points = 10
+                    else:
+                        # Player lost
+                        result = 'LOSS'
+                        points = -5
+                    
+                    # Find opponent
+                    opponent_id = None
+                    opponent_name = None
+                    for p_id, p_symbol in player_symbols.items():
+                        if p_id != player_id:
+                            opponent_id = p_id
+                            opponent_player = next((p for p in players if p.id == opponent_id), None)
+                            if opponent_player:
+                                # Get opponent name from database
+                                opponent_db = db.query(PlayerDB).filter(PlayerDB.id == opponent_id).first()
+                                if opponent_db:
+                                    opponent_user = db.query(UserDB).filter(UserDB.id == opponent_id).first()
+                                    opponent_name = opponent_user.name if opponent_user else None
+                            break
+                    
+                    # Save the game result
+                    auth_service.save_game_result(player_id, result, opponent_name, game_duration, points)
+            
             db.commit()
             
         return game
