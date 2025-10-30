@@ -356,8 +356,8 @@ class GameService:
             game_db.last_move_timestamp = datetime.now()
             game_db.move_count = game.move_count
             
-            # Save game result if game is finished
-            if final_winner is not None:
+            # Save game result if game is finished and it's NOT an AI game
+            if final_winner is not None and game.mode == GameMode.REMOTE:
                 game_duration = 0
                 if game.last_move_timestamp:
                     # Calculate game duration (this is approximate, would need start_time for exact calc)

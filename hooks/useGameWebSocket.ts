@@ -15,13 +15,25 @@ export const useGameSocket = (gameId: string, userId: string) => {
   const socketRef = useRef<WebSocket | null>(null);
 
   if (!socketRef.current && gameId && userId) {
-    // Construct WebSocket URL - use ws:// protocol and connect directly to backend
+    // Construct WebSocket URL
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    
     // In development, connect directly to backend on port 8000
-    // In production, connect through same origin (reverse proxy should handle it)
+    // In production, connect through backend API domain
     const isDevelopment = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-    const host = isDevelopment ? "localhost:8000" : window.location.host;
-    const wsUrl = `${protocol}//${host}/api/py/game/ws/connect?game_id=${gameId}&user_id=${userId}`;
+    
+    let backendHost: string;
+    if (isDevelopment) {
+      // Development: connect to localhost:8000
+      backendHost = "localhost:8000";
+    } else {
+      // Production: extract backend host from NEXT_PUBLIC_BACKEND_URL or use default
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://super-tic-tac-toe-api.buildora.work";
+      // Remove protocol from URL to get just the host
+      backendHost = backendUrl.replace(/^https?:\/\//, "");
+    }
+    
+    const wsUrl = `${protocol}//${backendHost}/api/py/game/ws/connect?game_id=${gameId}&user_id=${userId}`;
     
     const socket = new WebSocket(wsUrl);
 
