@@ -1,7 +1,9 @@
-api/
-alembic/
+api/**
+alembic/**
+*.py
 alembic.ini
 requirements.txt
+api/requirements.txt
 render.yaml
 env/
 *.pyc
@@ -12,3 +14,6 @@ __pycache__/
 .env.*
 venv/
 env/
+*.egg-info/
+dist/
+build/

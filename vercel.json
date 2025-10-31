@@ -1,8 +1,9 @@
 {
   "buildCommand": "pnpm build",
   "outputDirectory": ".next",
-  "ignoreCommand": "git diff --quiet HEAD~ HEAD -- app/ components/ lib/ hooks/ types/ store/ styles/ next.config.js package.json tsconfig.json tailwind.config.ts postcss.config.mjs .prettierrc .eslintrc.json || exit 1",
   "installCommand": "pnpm install --frozen-lockfile",
+  "cleanUrls": true,
+  "trailingSlash": false,
   "env": {
     "NEXT_PUBLIC_API_URL": "@next_public_api_url"
   }
