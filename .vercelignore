@@ -1,0 +1,14 @@
+api/
+alembic/
+alembic.ini
+requirements.txt
+render.yaml
+env/
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.env
+.env.*
+venv/
+env/
