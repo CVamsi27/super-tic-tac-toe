@@ -5,6 +5,7 @@ services:
     plan: starter
     buildCommand: pip install -r api/requirements.txt
     startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    ignoreBuildCommand: "git diff --quiet HEAD~ HEAD -- app/ components/ lib/ hooks/ types/ store/ next.config.js package.json tsconfig.json tailwind.config.ts postcss.config.mjs .eslintrc.json .prettierrc node_modules/ .next/ || exit 1"
     envVars:
       - key: DATABASE_URL
         sync: false
@@ -14,13 +15,3 @@ services:
         sync: false
       - key: PYTHON_VERSION
         value: 3.10.0
-
-envVarGroups:
-  - name: backend-config
-    envVars:
-      - key: DATABASE_URL
-        sync: false
-      - key: SECRET_KEY
-        sync: false
-      - key: GOOGLE_CLIENT_ID
-        sync: false
