@@ -33,16 +33,14 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, user_id: str):
             data = await websocket.receive_json()
             message_type = data.get('type')
             
-            handlers = {
-                'join_game': lambda: game_service.handle_join_game(websocket, game_id, user_id, game_service.active_websockets[game_id]),
-                'make_move': lambda: game_service.handle_make_move(websocket, game_id, user_id, data['move'], game_service.active_websockets[game_id]),
-                'reset_game': lambda: game_service.handle_reset_game(game_id, user_id, game_service.active_websockets[game_id]),
-                'leave': lambda: game_service.handle_leave(game_id, data['userId'], game_service.active_websockets[game_id])
-            }
-            
-            handler = handlers.get(message_type)
-            if handler:
-                await handler()
+            if message_type == 'join_game':
+                await game_service.handle_join_game(websocket, game_id, user_id, game_service.active_websockets[game_id])
+            elif message_type == 'make_move':
+                await game_service.handle_make_move(websocket, game_id, user_id, data['move'], game_service.active_websockets[game_id])
+            elif message_type == 'reset_game':
+                await game_service.handle_reset_game(game_id, user_id, game_service.active_websockets[game_id])
+            elif message_type == 'leave':
+                await game_service.handle_leave(game_id, data['userId'], game_service.active_websockets[game_id])
             else:
                 await websocket.send_json({"type": "error", "message": "Invalid action"})
 
