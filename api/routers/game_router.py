@@ -45,9 +45,8 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, user_id: str):
                 await websocket.send_json({"type": "error", "message": "Invalid action"})
 
     except WebSocketDisconnect:
-        print(f"WebSocket disconnected: {user_id}")
+        pass
     except Exception as e:
-        print(f"Error in websocket connection: {str(e)}")
         await websocket.send_json({"type": "error", "message": "Internal server error"})
     finally:
         if game_id in game_service.active_websockets:

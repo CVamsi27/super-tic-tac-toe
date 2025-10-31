@@ -16,13 +16,12 @@ def add_ai_difficulty_column():
             WHERE table_name='games' AND column_name='ai_difficulty'
         """))
         
-        if result.fetchone() is None:
-            # Column doesn't exist, add it
-            conn.execute(text("ALTER TABLE games ADD COLUMN ai_difficulty VARCHAR"))
-            conn.commit()
-            print("✅ Added ai_difficulty column to games table")
-        else:
-            print("✅ ai_difficulty column already exists")
+        columns = [row[0] for row in result]
+        
+        if 'ai_difficulty' not in columns:
+            with engine.connect() as connection:
+                connection.execute(text("ALTER TABLE games ADD COLUMN ai_difficulty VARCHAR(50);"))
+                connection.commit()
 
 if __name__ == "__main__":
     add_ai_difficulty_column()

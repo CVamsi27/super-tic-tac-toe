@@ -72,7 +72,6 @@ class GameService:
             return game_state
         
     def _cleanup_empty_game(self, game_id: str, db) -> bool:
-        print("Cleaning up empty game")
         if game_id not in self.games:
             game_db = db.query(GameDB).filter(GameDB.id == game_id).first()
             if game_db and (game_db.winner or not game_db.players):
@@ -233,7 +232,6 @@ class GameService:
                 else:
                     disconnected_sockets.add(client)
             except Exception as e:
-                print(f"Error broadcasting to client: {str(e)}")
                 disconnected_sockets.add(client)
         
         active_sockets.difference_update(disconnected_sockets)
@@ -270,13 +268,10 @@ class GameService:
             
             # For AI games, always broadcast AI player if it exists (so frontend knows about it)
             game = self.games[game_id]  # Refresh game reference
-            print(f"AI Game check: mode={game.mode}, players_before={players_before}, players_now={len(game.players)}")
-            print(f"All players: {[(p.id, p.symbol) for p in game.players]}")
             
             if game.mode == GameMode.AI:
                 # Find AI player
                 ai_player = next((p for p in game.players if p.id.startswith("ai_")), None)
-                print(f"AI Player found: {ai_player.id if ai_player else 'None'}")
                 
                 # Broadcast AI player if it exists and this is a new connection (not already in player list)
                 if ai_player and ai_player.id != player.id:
@@ -297,7 +292,6 @@ class GameService:
                             "current_player": self.games[game_id].current_player
                         }
                     })
-                    print(f"Broadcasted AI player: {ai_player.id}")
         except HTTPException as e:
             if websocket.client_state == WebSocketState.CONNECTED:
                 try:
@@ -305,7 +299,6 @@ class GameService:
                 except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
                     active_sockets.discard(websocket)
         except Exception as e:
-            print(f"Error in handle_join_game: {str(e)}")
             if websocket.client_state == WebSocketState.CONNECTED:
                 try:
                     await websocket.send_json({"type": "error", "message": "Internal server error"})
@@ -344,7 +337,6 @@ class GameService:
                 except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
                     active_sockets.discard(websocket)
         except Exception as e:
-            print(f"Error in handle_make_move: {str(e)}")
             if websocket.client_state == WebSocketState.CONNECTED:
                 try:
                     await websocket.send_json({"type": "error", "message": "Internal server error"})
@@ -363,7 +355,6 @@ class GameService:
             
             # Make sure it's AI's turn and game not won
             if game.winner is not None or game.current_player != PlayerSymbol.O:
-                print(f"AI move skipped: winner={game.winner}, current_player={game.current_player}")
                 return
             
             # Get available moves
@@ -380,14 +371,11 @@ class GameService:
                             available_moves.append((board_idx, cell_idx))
             
             if not available_moves:
-                print("No available moves for AI")
                 return
             
             # Use AI logic to determine best move
             ai_logic = AILogic(difficulty=game.ai_difficulty or "medium")
             board_idx, cell_idx = ai_logic.get_next_move(game, available_moves)
-            
-            print(f"AI chose move: board={board_idx}, cell={cell_idx}")
             
             # Make the move
             ai_player_id = f"ai_{game_id}"
@@ -414,7 +402,7 @@ class GameService:
             })
             
         except Exception as e:
-            print(f"Error making AI move: {str(e)}")
+            pass
 
     async def handle_leave(self, game_id: str, user_id: str, active_sockets: Set[WebSocket]) -> None:
         self.remove_watcher(game_id, user_id)
@@ -443,7 +431,6 @@ class GameService:
                 }
             })
         except HTTPException as e:
-            print(f"HTTP Error in handle_reset_game: {str(e.detail)}")
             # Send error message to requester only
             for client in list(active_sockets):
                 if client.client_state == WebSocketState.CONNECTED:
@@ -453,7 +440,6 @@ class GameService:
                     except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
                         pass
         except Exception as e:
-            print(f"Error in handle_reset_game: {str(e)}")
             # Send generic error message to all connected clients
             for client in list(active_sockets):
                 if client.client_state == WebSocketState.CONNECTED:
@@ -466,9 +452,6 @@ class GameService:
         game = self._get_game_or_404(game_id)
         validate_move(game, move)
         
-        print(f"Making move: playerId={move.playerId}, game mode={game.mode}")
-        print(f"Game players: {[(p.id, p.symbol) for p in game.players]}")
-        
         player = next((p for p in game.players if p.id == move.playerId), None)
         if not player:
             with get_db() as db:
@@ -476,14 +459,11 @@ class GameService:
                 if not player_db:
                     # For AI games, AI player might not be in memory yet, but should be in DB
                     if game.mode == GameMode.AI and move.playerId.startswith("ai_"):
-                        print(f"AI move attempted but player not found. Checking DB and game.players")
                         # Try to find in game.players anyway
                         ai_player = next((p for p in game.players if p.id.startswith("ai_")), None)
                         if ai_player:
                             player = ai_player
-                            print(f"Found AI player in game.players: {ai_player.id}")
                         else:
-                            print(f"AI player {move.playerId} not found in game.players or DB")
                             # Just create a temporary player object for the move
                             player = Player(
                                 id=move.playerId,
@@ -491,7 +471,6 @@ class GameService:
                                 status=PlayerStatus.PLAYER,
                                 join_order=1
                             )
-                            print(f"Created temporary AI player: {player.id}")
                     else:
                         raise HTTPException(status_code=404, detail="Player not found")
                 else:
@@ -501,7 +480,6 @@ class GameService:
                         status=player_db.status,
                         join_order=player_db.join_order
                     )
-                    print(f"Found player in DB: {player.id}")
                 db.commit()
         
         if player and player.status == PlayerStatus.WATCHER:
@@ -762,7 +740,6 @@ class GameService:
 
 
     def remove_watcher(self, game_id: str, user_id: str):
-        print("Removing player")
         game = self._get_game_or_404(game_id)
 
         with get_db() as db:

@@ -44,7 +44,6 @@ const PlayWith = () => {
           router.push(`/game/${data.game_id}`);
         },
         onError: (error) => {
-          console.log(error);
           const message = extractErrorMessage(error);
           toast.error("Something went wrong", { description: message });
         },

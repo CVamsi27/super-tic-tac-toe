@@ -100,7 +100,6 @@ class AILogic:
             board = game.global_board[board_idx]
             
             if self._is_winning_move(board, cell_idx, self.ai_symbol):
-                print(f"AI: Found winning move at board {board_idx}, cell {cell_idx}")
                 return move
         
         # Priority 2: Block opponent's winning move
@@ -109,20 +108,17 @@ class AILogic:
             board = game.global_board[board_idx]
             
             if self._is_blocking_move(board, cell_idx, self.human_symbol):
-                print(f"AI: Found blocking move at board {board_idx}, cell {cell_idx}")
                 return move
         
         # Priority 3: Prefer center positions
         # If in specific board, prefer center of that board
         center_moves = [m for m in available_moves if m[1] == 4]
         if center_moves:
-            print(f"AI: Choosing center position {center_moves[0]}")
             return center_moves[0]
         
         # Priority 4: Prefer corners (strong positions)
         corner_moves = [m for m in available_moves if m[1] in [0, 2, 6, 8]]
         if corner_moves:
-            print(f"AI: Choosing corner position {corner_moves[0]}")
             return corner_moves[0]
         
         return None
@@ -145,7 +141,6 @@ class AILogic:
                 best_score = score
                 best_move = move
         
-        print(f"AI: Minimax move: {best_move} with score {best_score}")
         return best_move
 
     def _minimax(
