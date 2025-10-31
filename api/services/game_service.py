@@ -194,6 +194,35 @@ class GameService:
     async def broadcast_to_game(self, active_sockets: Set[WebSocket], message: Dict[str, Any]) -> None:
         disconnected_sockets = set()
         
+        # Ensure board and enums are serializable
+        if "game_state" in message:
+            game_state = message["game_state"]
+            
+            # Convert global_board
+            if "global_board" in game_state and game_state["global_board"]:
+                board = game_state["global_board"]
+                game_state["global_board"] = [
+                    [cell.value if cell else None for cell in row] for row in board
+                ]
+            
+            # Convert winner and current_player enums
+            if "winner" in game_state and game_state["winner"]:
+                game_state["winner"] = game_state["winner"].value
+            if "current_player" in game_state and game_state["current_player"]:
+                game_state["current_player"] = game_state["current_player"].value
+        
+        # Convert symbol field if present
+        if "symbol" in message and message["symbol"]:
+            message["symbol"] = message["symbol"].value
+        
+        # Convert status field if present
+        if "status" in message and message["status"]:
+            message["status"] = message["status"].value
+        
+        # Convert mode field if present
+        if "mode" in message and message["mode"]:
+            message["mode"] = message["mode"].value
+        
         for client in active_sockets:
             try:
                 if client.client_state == WebSocketState.CONNECTED:
