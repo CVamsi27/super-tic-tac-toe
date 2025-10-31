@@ -5,8 +5,11 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "framework": "nextjs",
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@next_public_api_url"
-  },
-  "ignoreCommand": "[ -z \"$FORCE_BUILD\" ] && git diff --quiet HEAD~ HEAD -- app/ components/ lib/ hooks/ types/ store/ styles/ public/ next.config.js package.json tsconfig.json tailwind.config.ts postcss.config.mjs .prettierrc .eslintrc.json || exit 0"
+  "git": {
+    "deploymentEnabled": {
+      "api/**": false,
+      "alembic/**": false,
+      "*.md": false
+    }
+  }
 }
