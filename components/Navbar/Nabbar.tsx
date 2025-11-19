@@ -12,7 +12,7 @@ const Navbar = () => {
   };
 
   return (
-    <div className="sticky top-0 z-50 flex items-center justify-between bg-white border-b border-slate-200 shadow-sm px-4 sm:px-6 py-3">
+    <div className="relative top-0 z-50 flex items-center justify-between bg-white border-b border-slate-200 shadow-sm px-4 sm:px-6 py-3">
       <Link
         href="/"
         className="font-bold text-2xl sm:text-3xl text-gradient hover:scale-105 smooth-transition animate-slideInDown"

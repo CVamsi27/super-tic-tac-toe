@@ -16,12 +16,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full" suppressHydrationWarning>
-      <body className={`relative h-full font-sans antialiased bg-gradient-main`}>
+    <html lang="en" className="h-screen overflow-hidden" suppressHydrationWarning>
+      <body className={`relative h-screen font-sans antialiased bg-gradient-main overflow-hidden`}>
         <Providers>
-          <main className="relative flex flex-col h-full">
+          <main className="relative flex flex-col h-screen overflow-hidden">
             <Navbar />
-            <div className="flex-grow flex-1 bg-gradient-main overflow-x-hidden">
+            <div className="flex-grow flex-1 bg-gradient-main overflow-y-auto overflow-x-hidden">
               {children}
             </div>
             <Toaster />

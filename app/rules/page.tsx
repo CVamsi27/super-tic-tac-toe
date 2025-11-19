@@ -1,20 +1,6 @@
-import Link from "next/link";
-
 export default function RulesPage() {
   return (
     <div className="min-h-screen bg-gradient-main">
-      {/* Navigation */}
-      <nav className="bg-gradient-card backdrop-blur-lg border-b border-slate-200">
-        <div className="max-w-full px-4 py-2 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-gradient">
-            🎮 Super Tic Tac Toe
-          </Link>
-          <Link href="/" className="text-sm text-slate-700 hover:text-blue-600 font-medium">
-            Back Home
-          </Link>
-        </div>
-      </nav>
-
       {/* Content */}
       <div className="max-w-3xl mx-auto px-4 py-6">
         <div className="bg-white rounded-lg border border-slate-200">

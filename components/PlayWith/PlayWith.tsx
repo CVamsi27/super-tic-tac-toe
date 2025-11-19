@@ -64,8 +64,8 @@ const PlayWith = () => {
   };
 
   return (
-    <div className="flex flex-col justify-between h-full w-full gap-4 sm:gap-6">
-      <div className="flex flex-col gap-3 sm:gap-4 w-full">
+    <div className="flex flex-col justify-between h-full w-full gap-3 sm:gap-4">
+      <div className="flex flex-col gap-2 sm:gap-3 w-full">
         {!showDifficultySelect ? (
           // Game Mode Selection
           Object.entries(CHOOSE_GAME_TYPES).map(([key, value], index) => (
@@ -93,18 +93,18 @@ const PlayWith = () => {
         ) : (
           // Difficulty Selection for AI
           <>
-            <div className="text-center mb-2 animate-slideInUp">
-              <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
-                🤖 Choose AI Difficulty
+            <div className="text-center mb-1 animate-slideInUp">
+              <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">
+                Choose AI Difficulty
               </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                 Select how challenging you want the AI to be
               </p>
             </div>
             {[
-              { level: "easy" as DifficultyLevel, emoji: "😊", label: "Easy", desc: "Perfect for beginners" },
-              { level: "medium" as DifficultyLevel, emoji: "🤔", label: "Medium", desc: "Balanced challenge" },
-              { level: "hard" as DifficultyLevel, emoji: "🔥", label: "Hard", desc: "Maximum difficulty" },
+              { level: "easy" as DifficultyLevel, label: "Easy", desc: "Perfect for beginners" },
+              { level: "medium" as DifficultyLevel, label: "Medium", desc: "Balanced challenge" },
+              { level: "hard" as DifficultyLevel, label: "Hard", desc: "Maximum difficulty" },
             ].map((difficulty, index) => (
               <div
                 key={difficulty.level}
@@ -114,16 +114,15 @@ const PlayWith = () => {
                 <CustomButton
                   disabled={isLoading}
                   onClick={() => handleDifficultySelect(difficulty.level)}
-                  className="w-full h-auto py-6"
+                  className="w-full h-auto py-3"
                   variant={selectedDifficulty === difficulty.level ? "default" : "outline"}
                 >
                   {isButtonLoading[GameModeType.AI] && selectedDifficulty === difficulty.level ? (
                     <Loading />
                   ) : (
-                    <div className="flex flex-col items-center justify-center gap-1">
-                      <span className="text-3xl leading-none">{difficulty.emoji}</span>
-                      <span className="font-semibold text-base leading-tight">{difficulty.label}</span>
-                      <span className="text-xs opacity-70 font-normal leading-tight">{difficulty.desc}</span>
+                    <div className="flex flex-col items-center justify-center gap-0.5">
+                      <span className="font-semibold text-sm leading-tight">{difficulty.label}</span>
+                      <span className="text-[10px] opacity-70 font-normal leading-tight">{difficulty.desc}</span>
                     </div>
                   )}
                 </CustomButton>
@@ -132,7 +131,7 @@ const PlayWith = () => {
             <CustomButton
               variant="ghost"
               onClick={() => setShowDifficultySelect(false)}
-              className="w-full mt-2"
+              className="w-full mt-1 h-8"
               disabled={isLoading}
             >
               ← Back
@@ -140,13 +139,13 @@ const PlayWith = () => {
           </>
         )}
       </div>
-      <div className="border-t border-slate-200 dark:border-slate-700 pt-4 animate-slideInUp">
+      <div className="border-t border-slate-200 dark:border-slate-700 pt-3 animate-slideInUp">
         <CustomLink
           className="w-full justify-center text-center block"
           variant="inverted"
           href="/rules"
         >
-          📖 View Rules
+          View Rules
         </CustomLink>
       </div>
     </div>

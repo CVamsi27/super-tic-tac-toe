@@ -17,7 +17,7 @@ const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
   
   return (
     <div
-      className={`flex flex-col items-center justify-center bg-gradient-main min-h-screen p-3 sm:p-4 md:p-6 overflow-x-auto smooth-transition gap-4`}
+      className={`flex flex-col items-center justify-start bg-gradient-main h-full p-3 sm:p-4 md:p-6 overflow-y-auto smooth-transition gap-4`}
     >
       {/* Copy URL Button - Top Section (Only for Remote games) */}
       {isGameReady && !isAIGame && (

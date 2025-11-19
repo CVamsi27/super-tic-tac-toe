@@ -176,8 +176,6 @@ class AuthService:
             # Update user stats
             user = db.query(UserDB).filter(UserDB.id == user_id).first()
             if user:
-                user.points += points_earned
-                
                 if result == "WIN":
                     user.wins += 1
                     if points_earned == 0:
