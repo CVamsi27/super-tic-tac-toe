@@ -131,7 +131,6 @@ export default function LeaderboardPage() {
                             )}
                             <div>
                               <div className="font-semibold text-slate-900">{user.name}</div>
-                              <div className="text-xs text-slate-500">{user.email}</div>
                             </div>
                           </div>
                         </td>

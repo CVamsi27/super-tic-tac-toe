@@ -4,7 +4,7 @@ export const Footer = (): JSX.Element => {
   const d = new Date();
   const year = d.getFullYear();
   return (
-    <footer className="w-full flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 border-t border-slate-200 dark:border-slate-700 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 smooth-transition mt-8">
+    <footer className="w-full flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 smooth-transition">
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
         <div className="flex items-center gap-2 hover:scale-110 smooth-transition">
           <Copyright className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600 dark:text-slate-400" />

@@ -12,11 +12,6 @@ export default function Home() {
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mb-2">
             Challenge your skills with an enhanced version
           </p>
-          <div className="flex justify-center gap-2 mt-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-float" style={{ animationDelay: "0s" }} />
-            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-float" style={{ animationDelay: "0.2s" }} />
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-float" style={{ animationDelay: "0.4s" }} />
-          </div>
         </div>
 
         {/* Main Card */}
@@ -40,6 +35,11 @@ export default function Home() {
           <div className="p-2 sm:p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-slate-800 dark:to-slate-700 rounded-lg border border-green-200 dark:border-slate-600">
             <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">
               Tip: Create a game and share the link! First person to join becomes your opponent, others watch as spectators.
+            </p>
+          </div>
+          <div className="p-2 sm:p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+              Note: Login to save your progress and appear on the global leaderboard!
             </p>
           </div>
         </div>

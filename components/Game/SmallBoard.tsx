@@ -21,28 +21,26 @@ export const SmallBoard: React.FC<{
           : "bg-gradient-to-br from-red-200 to-red-300 shadow-lg";
       }
       return isActive
-        ? "bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 shadow-md border-2 border-blue-400 dark:border-blue-500"
-        : "opacity-40 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700";
+        ? "bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 shadow-lg border-4 border-blue-500 dark:border-blue-400 ring-2 ring-blue-300 dark:ring-blue-600"
+        : "opacity-30 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-900 border-2 border-slate-300 dark:border-slate-700";
     }, [board, isActive]);
 
     return (
       <div
-        className={`grid grid-cols-3 w-fit rounded-lg sm:rounded-xl p-1 sm:p-2 smooth-transition transform ${
+        className={`grid grid-cols-3 gap-1 sm:gap-1.5 w-fit rounded-lg sm:rounded-xl p-2 sm:p-3 smooth-transition transform ${
           isActive ? "scale-105 hover:scale-110" : ""
         } ${getBoardStatus()}`}
       >
         {board.map((cell, cellIndex) => (
           <button
             key={cellIndex}
-            className={`inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-sm sm:rounded-md ${
+            className={`inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-sm sm:rounded-md bg-white/30 dark:bg-slate-900/30 border border-slate-300 dark:border-slate-600 ${
               isActive && !cell
-                ? "hover:bg-white/50 dark:hover:bg-black/20 cursor-pointer"
+                ? "hover:bg-white/70 dark:hover:bg-slate-800/50 cursor-pointer"
                 : ""
             } ${cell !== null || disabled ? "" : "hover:scale-110"} smooth-transition transform ${
-              isActive ? "border-slate-400 dark:border-slate-500" : ""
-            } ${cellIndex == 0 || cellIndex == 3 || cellIndex == 6 ? "" : "border-l"}  ${
-              cellIndex == 6 || cellIndex == 7 || cellIndex == 8 ? "" : "border-b"
-            } ${cell === "X" ? "text-blue-600 dark:text-blue-400" : "text-red-600 dark:text-red-400"}`}
+              cell === "X" ? "text-blue-600 dark:text-blue-400" : "text-red-600 dark:text-red-400"
+            }`}
             onClick={() => {
               if (disabled) return;
               sendMessage({
