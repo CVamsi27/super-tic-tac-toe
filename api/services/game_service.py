@@ -768,7 +768,7 @@ class GameService:
 
     async def cleanup_inactive_games(self) -> None:
         with get_db() as db:
-            cleanup_inactive_games(db, self.games)
+            cleanup_inactive_games(self.games)
             db.commit()
 
 game_service = GameService()

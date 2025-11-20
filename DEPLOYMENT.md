@@ -224,6 +224,25 @@ Now your API is available at: `https://super-tic-tac-toe-api.buildora.work/api/p
 
 ## Troubleshooting
 
+*   *Warning*: This makes your SSH port open to the world. Ensure you have a strong key pair (which you do).
+
+#### "connect() failed (111: Connection refused)"
+This means Nginx cannot talk to your backend.
+1.  **Check if the container is running**:
+    ```bash
+    docker ps -a
+    ```
+    If it says "Exited", the app crashed.
+
+2.  **Check the logs**:
+    ```bash
+    docker compose logs api
+    ```
+    *   **Likely Cause**: `ValueError: DATABASE_URL environment variable is not set`.
+    *   **Fix**: Ensure you created the `.env` file in the `super-tic-tac-toe` directory with `DATABASE_URL=...`.
+    *   **Likely Cause**: `ModuleNotFoundError`.
+    *   **Fix**: Rebuild the container: `docker compose up -d --build`.
+
 ### "Cannot connect to the Docker daemon"
 If you see this error, it means your user doesn't have permission to talk to the Docker background process.
 
