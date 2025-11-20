@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { LogOut, User, Trophy } from "lucide-react";
+import { LogOut, Trophy, Home } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
 
   const handleLogout = () => {
     logout();
@@ -15,9 +18,16 @@ const Navbar = () => {
     <div className="relative top-0 z-50 flex items-center justify-between bg-white border-b border-slate-200 shadow-sm px-4 sm:px-6 py-3">
       <Link
         href="/"
-        className="font-bold text-2xl sm:text-3xl text-gradient hover:scale-105 smooth-transition animate-slideInDown"
+        className="font-bold text-2xl sm:text-3xl text-gradient hover:scale-105 smooth-transition animate-slideInDown flex items-center gap-2"
       >
-        🎮 Super Tic-Tac-Toe
+        {isHomePage ? (
+          <>🎮 Super Tic-Tac-Toe</>
+        ) : (
+          <>
+            <Home size={28} className="text-blue-600" />
+            <span>Home</span>
+          </>
+        )}
       </Link>
 
       <div className="flex items-center gap-2 sm:gap-4">

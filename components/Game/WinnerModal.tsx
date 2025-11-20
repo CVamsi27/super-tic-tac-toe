@@ -1,5 +1,5 @@
 import { PlayerType, GameState } from "@/types";
-import { Circle, X, Trophy, Handshake, LogIn } from "lucide-react";
+import { Handshake, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -23,6 +23,15 @@ export default function WinnerModal({ winner, gameState }: { winner: PlayerType;
   };
 
   const winnerName = getWinnerName();
+  
+  // Check if current user won
+  const didUserWin = () => {
+    if (!user || !gameState || !winner || winner === "T") return false;
+    const winningPlayer = gameState.players.find(p => p?.symbol === winner);
+    return winningPlayer?.id === user.id;
+  };
+
+  const userWon = didUserWin();
 
   return (
     isOpen && (
@@ -30,9 +39,7 @@ export default function WinnerModal({ winner, gameState }: { winner: PlayerType;
         <div className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-sm sm:max-w-md text-center transform scale-100 animate-scaleIn">
           <div className="mb-4 sm:mb-6">
             <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2 flex items-center justify-center gap-2">
-              <Trophy className="w-8 h-8 text-yellow-500" />
               <span>Game Over!</span>
-              <Trophy className="w-8 h-8 text-yellow-500" />
             </h2>
           </div>
           <div className="mb-6 sm:mb-8">
@@ -46,19 +53,37 @@ export default function WinnerModal({ winner, gameState }: { winner: PlayerType;
                   Great strategy on both sides!
                 </p>
               </div>
-            ) : winner === "X" ? (
-              <div className="flex flex-col items-center gap-3">
-                <X className="w-16 h-16 text-blue-600 dark:text-blue-400 animate-bounce" />
-                <p className="text-lg sm:text-xl text-slate-700 dark:text-slate-300 font-semibold">
-                  {winnerName ? `${winnerName} wins!` : "Player X wins!"}
-                </p>
-              </div>
             ) : (
               <div className="flex flex-col items-center gap-3">
-                <Circle className="w-16 h-16 text-red-600 dark:text-red-400 animate-bounce" />
-                <p className="text-lg sm:text-xl text-slate-700 dark:text-slate-300 font-semibold">
-                  {winnerName ? `${winnerName} wins!` : "Player O wins!"}
-                </p>
+                {userWon ? (
+                  <>
+                    <div className="text-6xl sm:text-7xl animate-bounce">🎉</div>
+                    <p className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                      You Won!
+                    </p>
+                    <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
+                      Congratulations on your victory!
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xl sm:text-2xl font-bold text-slate-700 dark:text-slate-300">
+                      {winnerName ? (
+                        <>
+                          <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                            {winnerName}
+                          </span>
+                          {" won the game!"}
+                        </>
+                      ) : (
+                        `Player ${winner} won the game!`
+                      )}
+                    </p>
+                    <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
+                      Better luck next time!
+                    </p>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -83,7 +108,7 @@ export default function WinnerModal({ winner, gameState }: { winner: PlayerType;
               className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 text-sm sm:text-base"
               onClick={() => router.push("/")}
             >
-              🎮 Play Again
+              Play Again
             </button>
             <button
               className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-slate-300 to-slate-400 dark:from-slate-700 dark:to-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-lg hover:from-slate-400 hover:to-slate-500 dark:hover:from-slate-600 dark:hover:to-slate-500 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 text-sm sm:text-base"

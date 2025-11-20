@@ -26,7 +26,7 @@ const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 rounded-xl border border-blue-100 dark:border-slate-600 shadow-md">
             <CopyGameUrl gameId={gameId} />
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              First to join becomes player 2, others watch
+              First to join becomes Player 2; others join as spectators.
             </p>
           </div>
         </div>
