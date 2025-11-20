@@ -26,17 +26,26 @@ const Navbar = () => {
           className="flex items-center gap-1 px-3 py-2 rounded-lg text-slate-700 hover:text-blue-600 hover:bg-slate-100 transition-colors duration-300 text-sm sm:text-base font-medium"
         >
           <Trophy size={18} />
-          <span className="hidden sm:inline">Leaderboard</span>
         </Link>
 
         {user ? (
           <>
             <Link
               href="/profile"
-              className="flex items-center gap-1 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all duration-300 text-sm sm:text-base font-medium"
+              className="flex items-center gap-2 px-2 py-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all duration-300 text-sm sm:text-base font-medium"
+              title={user.name}
             >
-              <User size={18} />
-              <span className="hidden sm:inline">{user.name}</span>
+              {user.profile_picture ? (
+                <img 
+                  src={user.profile_picture} 
+                  alt={user.name}
+                  className="w-8 h-8 rounded-full border-2 border-blue-300"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full border-2 border-blue-300 bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                  {user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                </div>
+              )}
             </Link>
             <button
               onClick={handleLogout}

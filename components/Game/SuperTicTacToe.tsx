@@ -8,7 +8,7 @@ import { useParams } from "next/navigation";
 import { ResetGame } from "./ResetGame";
 import { CopyGameUrl } from "./CopyGameUrl";
 import { useGameSocket } from "@/hooks/useGameWebSocket";
-import { Share2, Bot, Eye } from "lucide-react";
+import { Bot, Eye } from "lucide-react";
 
 const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
   const { gameId } = useParams<{ gameId: string }>();
@@ -20,16 +20,10 @@ const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
     <div
       className={`flex flex-col items-center justify-start bg-gradient-main h-full p-3 sm:p-4 md:p-6 overflow-y-auto smooth-transition gap-4`}
     >
-      {/* Copy URL Button - Top Section (Only for Remote games) */}
+      {/* Share Game - Top Section (Only for Remote games) */}
       {isGameReady && !isAIGame && (
         <div className="w-fit max-w-4xl animate-slideInDown">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 rounded-xl border border-blue-100 dark:border-slate-600 shadow-md">
-            <div className="flex items-center gap-2">
-              <Share2 size={18} className="text-blue-600 dark:text-blue-400" />
-              <p className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">
-                Share this game:
-              </p>
-            </div>
             <CopyGameUrl gameId={gameId} />
             <p className="text-xs text-slate-600 dark:text-slate-400">
               First to join becomes player 2, others watch

@@ -42,7 +42,7 @@ export const PlayerStatus: React.FC<{
         </div>
       )}
 
-      {winner && <WinnerModal winner={winner} />}
+      {winner && <WinnerModal winner={winner} gameState={games[gameId]} />}
     </div>
   );
 });

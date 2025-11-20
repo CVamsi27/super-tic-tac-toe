@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Check } from "lucide-react";
+import { Share2, Check } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -30,18 +30,18 @@ export const CopyGameUrl: React.FC<CopyGameUrlProps> = ({ gameId }) => {
   return (
     <button
       onClick={handleCopyUrl}
-      className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 text-xs sm:text-sm"
-      title="Copy game link to share"
+      className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 text-xs sm:text-sm"
+      title="Share game link"
     >
       {isCopied ? (
         <>
           <Check className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="hidden sm:inline">Copied!</span>
+          <span>Copied!</span>
         </>
       ) : (
         <>
-          <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="hidden sm:inline">Copy Link</span>
+          <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span>Share Game</span>
         </>
       )}
     </button>

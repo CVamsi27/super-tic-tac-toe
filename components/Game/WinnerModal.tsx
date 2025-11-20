@@ -1,14 +1,28 @@
-import { PlayerType } from "@/types";
+import { PlayerType, GameState } from "@/types";
 import { Circle, X, Trophy, Handshake, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 
-export default function WinnerModal({ winner }: { winner: PlayerType }) {
+export default function WinnerModal({ winner, gameState }: { winner: PlayerType; gameState: GameState | null }) {
   const [isOpen, setIsOpen] = useState(true);
   const router = useRouter();
   const { user } = useAuth();
+
+  const getWinnerName = () => {
+    if (!gameState || !winner || winner === "T") return null;
+    const winningPlayer = gameState.players.find(p => p?.symbol === winner);
+    if (!winningPlayer) return null;
+    
+    if (winningPlayer.id.startsWith("ai_")) return "AI";
+    
+    if (user && user.id === winningPlayer.id) return user.name;
+    
+    return null;
+  };
+
+  const winnerName = getWinnerName();
 
   return (
     isOpen && (
@@ -36,14 +50,14 @@ export default function WinnerModal({ winner }: { winner: PlayerType }) {
               <div className="flex flex-col items-center gap-3">
                 <X className="w-16 h-16 text-blue-600 dark:text-blue-400 animate-bounce" />
                 <p className="text-lg sm:text-xl text-slate-700 dark:text-slate-300 font-semibold">
-                  Player X wins!
+                  {winnerName ? `${winnerName} wins!` : "Player X wins!"}
                 </p>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-3">
                 <Circle className="w-16 h-16 text-red-600 dark:text-red-400 animate-bounce" />
                 <p className="text-lg sm:text-xl text-slate-700 dark:text-slate-300 font-semibold">
-                  Player O wins!
+                  {winnerName ? `${winnerName} wins!` : "Player O wins!"}
                 </p>
               </div>
             )}
