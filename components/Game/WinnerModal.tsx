@@ -24,7 +24,6 @@ export default function WinnerModal({ winner, gameState }: { winner: PlayerType;
 
   const winnerName = getWinnerName();
   
-  // Check if current user won
   const didUserWin = () => {
     if (!user || !gameState || !winner || winner === "T") return false;
     const winningPlayer = gameState.players.find(p => p?.symbol === winner);

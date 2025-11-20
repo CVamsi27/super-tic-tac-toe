@@ -6,7 +6,7 @@ export default function RulesPage() {
         <div className="bg-white rounded-lg border border-slate-200">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-slate-200">
-            <h1 className="text-2xl font-bold text-slate-900">📖 Super Tic-Tac-Toe Rules</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Super Tic-Tac-Toe Rules</h1>
             <p className="text-sm text-slate-600 mt-1">Master the game and dominate the leaderboard</p>
           </div>
 

@@ -16,12 +16,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-screen overflow-hidden" suppressHydrationWarning>
-      <body className={`relative h-screen font-sans antialiased bg-gradient-main overflow-hidden`}>
+    <html lang="en" className="h-full" suppressHydrationWarning>
+      <body className={`relative h-full font-sans antialiased bg-gradient-main`}>
         <Providers>
-          <main className="relative flex flex-col h-screen overflow-hidden">
+          <main className="relative flex flex-col min-h-screen">
             <Navbar />
-            <div className="flex-grow flex-1 bg-gradient-main overflow-y-auto overflow-x-hidden">
+            <div className="flex-grow flex-1 bg-gradient-main overflow-y-auto overflow-x-hidden" style={{ WebkitOverflowScrolling: 'touch' }}>
               {children}
             </div>
             <Toaster />
