@@ -142,3 +142,26 @@ Now you can access your API at: `http://YOUR_INSTANCE_PUBLIC_IP:8000/api/py/docs
 | **Total** | | **$0.00** | **~$11.00/mo** |
 
 *Note: Prices are estimates based on us-east-1 region.*
+
+## Troubleshooting
+
+### "Cannot connect to the Docker daemon"
+If you see this error, it means your user doesn't have permission to talk to the Docker background process.
+
+**Fix 1: Refresh Group Membership (Easiest)**
+Run this command to refresh your permissions without logging out:
+```bash
+newgrp docker
+```
+
+**Fix 2: Check if Docker is Running**
+If permissions aren't the issue, the service might be stopped.
+```bash
+sudo systemctl start docker
+```
+
+**Fix 3: Use Sudo (Last Resort)**
+If all else fails, run commands with sudo:
+```bash
+sudo docker compose up -d --build
+```

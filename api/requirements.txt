@@ -10,6 +10,6 @@ pytest-asyncio
 sqlalchemy==2.0.36
 psycopg2-binary==2.9.11
 alembic==1.17.1
-apscheduler==3.12.1
+apscheduler==3.11.1
 google-auth==2.32.0
 PyJWT==2.10.1
