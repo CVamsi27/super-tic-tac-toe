@@ -132,6 +132,82 @@ Now you can access your API at: `http://YOUR_INSTANCE_PUBLIC_IP:8000/api/py/docs
 
 ---
 
+## Step 6: Custom Domain & SSL (Recommended)
+
+To access your backend at `https://super-tic-tac-toe-api.buildora.work`, you need to set up a static IP, configure DNS, and enable SSL (HTTPS).
+
+### 1. Allocate an Elastic IP
+AWS EC2 IPs change if you stop/start the instance. An Elastic IP is static and free as long as it's attached to a running instance.
+1.  Go to **EC2 Console** -> **Network & Security** -> **Elastic IPs**.
+2.  Click **Allocate Elastic IP address** -> **Allocate**.
+3.  Select the new IP -> **Actions** -> **Associate Elastic IP address**.
+4.  Select your instance (`super-tic-tac-toe-backend`) and click **Associate**.
+
+### 2. Configure DNS
+1.  Go to your DNS provider (where you bought `buildora.work`).
+2.  Add an **A Record**:
+    *   **Name**: `super-tic-tac-toe-api` (subdomain)
+    *   **Value**: `YOUR_ELASTIC_IP` (e.g., `34.201.x.x`)
+    *   **TTL**: `300` (or default)
+
+### 3. Set up Nginx & SSL (HTTPS)
+Since your frontend is HTTPS, your backend **must** be HTTPS to avoid "Mixed Content" errors. We'll use Nginx as a reverse proxy and Certbot for free SSL.
+
+**A. Install Nginx**
+SSH into your instance and run:
+```bash
+sudo apt-get install -y nginx certbot python3-certbot-nginx
+```
+
+**B. Configure Nginx**
+Create a config file for your site:
+```bash
+sudo nano /etc/nginx/sites-available/fastapi
+```
+
+Paste this content (replace `super-tic-tac-toe-api.buildora.work` with your actual domain):
+```nginx
+server {
+    server_name super-tic-tac-toe-api.buildora.work;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+Save and exit (`Ctrl+O`, `Enter`, `Ctrl+X`).
+
+Enable the site:
+```bash
+sudo ln -s /etc/nginx/sites-available/fastapi /etc/nginx/sites-enabled/
+sudo nginx -t  # Test config
+sudo systemctl restart nginx
+```
+
+**C. Enable SSL (HTTPS)**
+Run Certbot to automatically get a certificate and configure HTTPS:
+```bash
+sudo certbot --nginx -d super-tic-tac-toe-api.buildora.work
+```
+*   Enter your email.
+*   Agree to terms.
+*   Select `2` (Redirect HTTP to HTTPS) if asked (newer versions do this automatically).
+
+**D. Update Security Group**
+1.  Go to **AWS EC2 Console** -> **Security Groups**.
+2.  Edit Inbound Rules.
+3.  **Add Rule**: Type `HTTP` (Port 80), Source `0.0.0.0/0`.
+4.  **Add Rule**: Type `HTTPS` (Port 443), Source `0.0.0.0/0`.
+5.  (Optional) You can now remove the custom rule for port `8000` if you want to force traffic through Nginx.
+
+Now your API is available at: `https://super-tic-tac-toe-api.buildora.work/api/py/docs`
+
+---
+
 ## Cost Analysis (Monthly)
 
 | Item | Type | Cost (Free Tier) | Cost (After 12 Months) |
@@ -165,3 +241,26 @@ If all else fails, run commands with sudo:
 ```bash
 sudo docker compose up -d --build
 ```
+
+---
+
+## Step 7: Automate Deployment (CI/CD)
+
+We have added a GitHub Action (`.github/workflows/deploy.yml`) to automatically deploy changes when you push to `main`.
+
+### 1. Configure GitHub Secrets
+Go to your GitHub Repository -> **Settings** -> **Secrets and variables** -> **Actions** -> **New repository secret**.
+
+Add the following secrets:
+
+| Name | Value |
+| :--- | :--- |
+| `EC2_HOST` | Your Elastic IP (e.g., `34.201.x.x`) |
+| `EC2_USER` | `ubuntu` |
+| `EC2_SSH_KEY` | The content of your `.pem` file. <br>Run `cat ~/.ssh/fastapi-key.pem` on your local machine and copy the **entire** content (including `-----BEGIN...` and `...END-----`). |
+
+### 2. Trigger a Deployment
+Now, whenever you push code to the `main` branch, GitHub Actions will:
+1.  SSH into your EC2 instance.
+2.  Pull the latest code.
+3.  Rebuild and restart the Docker containers.

@@ -17,11 +17,11 @@ export const useGameSocket = (gameId: string, userId: string) => {
   if (!socketRef.current && gameId && userId) {
     // Construct WebSocket URL
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    
+
     // In development, connect directly to backend on port 8000
     // In production, connect through backend API domain
     const isDevelopment = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-    
+
     let backendHost: string;
     if (isDevelopment) {
       // Development: connect to localhost:8000
@@ -32,9 +32,9 @@ export const useGameSocket = (gameId: string, userId: string) => {
       // Remove protocol from URL to get just the host
       backendHost = backendUrl.replace(/^https?:\/\//, "");
     }
-    
+
     const wsUrl = `${protocol}//${backendHost}/api/py/game/ws/connect?game_id=${gameId}&user_id=${userId}`;
-    
+
     const socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
