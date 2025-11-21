@@ -18,11 +18,11 @@ const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
   
   return (
     <div
-      className={`flex flex-col items-center justify-start bg-gradient-main h-full p-3 sm:p-4 md:p-6 overflow-y-auto smooth-transition gap-3 sm:gap-4 md:gap-6`}
+      className={`flex flex-col items-center justify-start bg-gradient-main h-full p-3 sm:p-4 md:p-6 overflow-y-auto smooth-transition gap-3 sm:gap-4 md:gap-6 glass`}
     >
       {isGameReady && !isAIGame && (
         <div className="w-fit max-w-4xl animate-slideInDown">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-xl border border-blue-100 dark:border-slate-600 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 glass border border-blue-100 dark:border-slate-600 hover:shadow-md transition-all duration-300">
             <CopyGameUrl gameId={gameId} />
             <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
               Share the game link for others to spectate the match.

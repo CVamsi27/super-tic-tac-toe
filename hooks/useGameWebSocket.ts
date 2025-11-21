@@ -49,9 +49,8 @@ export const useGameSocket = (gameId: string, userId: string) => {
 
         switch (message.type) {
           case "error":
-            setStatus(WebSocketStatus.ERROR);
+            // Just show the error, don't disconnect or redirect
             toast.error(message.message);
-            router.push("/");
             break;
 
           case "player_joined":

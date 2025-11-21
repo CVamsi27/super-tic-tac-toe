@@ -3,8 +3,8 @@ import PlayWith from "@/components/PlayWith/PlayWith";
 export default function Home() {
   return (
     <div className="h-full flex items-center justify-center flex-col p-4 sm:p-6">
-      <div className="w-full max-w-lg">
-        <div className="text-center mb-6 sm:mb-8 animate-slideInDown">
+      <div className="w-full max-w-lg flex flex-col items-center justify-center gap-4 sm:gap-6">
+        <div className="text-center mb-0 sm:mb-0 animate-slideInDown">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gradient mb-2 animate-slideInUp">
             Super Tic-Tac-Toe
           </h1>
@@ -13,7 +13,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="bg-gradient-card rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 shadow-xl border border-slate-200 dark:border-slate-700 animate-scaleIn">
+        <div className="bg-gradient-card rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 shadow-xl border border-slate-200 dark:border-slate-700 animate-scaleIn w-full">
           <div className="flex flex-col justify-between h-full gap-4 sm:gap-6">
             <div className="flex flex-col gap-3 sm:gap-4">
               <PlayWith />
@@ -21,7 +21,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-6 text-center space-y-2">
+        <div className="mt-0 text-center space-y-2 w-full max-w-lg">
           <p className="text-xs text-slate-500 dark:text-slate-500">
             Play online with friends or enjoy a quick game
           </p>

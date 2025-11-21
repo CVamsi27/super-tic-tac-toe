@@ -17,27 +17,27 @@ export const SmallBoard: React.FC<{
     const getBoardStatus = useCallback(() => {
       if (board.every((cell) => cell === board[0] && cell !== null)) {
         return board[0] === "X"
-          ? "bg-gradient-to-br from-blue-200 to-blue-300 shadow-lg opacity-80"
-          : "bg-gradient-to-br from-red-200 to-red-300 shadow-lg opacity-80";
+          ? "bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 shadow-lg border-blue-300 dark:border-blue-700"
+          : "bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/40 dark:to-red-800/40 shadow-lg border-red-300 dark:border-red-700";
       }
       return isActive
-        ? "bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 shadow-[0_0_15px_rgba(59,130,246,0.5)] dark:shadow-[0_0_15px_rgba(59,130,246,0.3)] border-2 border-blue-400 dark:border-blue-500 scale-[1.02]"
-        : "opacity-40 bg-slate-100 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 grayscale";
+        ? "bg-white dark:bg-slate-800 shadow-[0_0_20px_rgba(59,130,246,0.3)] dark:shadow-[0_0_20px_rgba(59,130,246,0.15)] border-2 border-blue-400 dark:border-blue-500 scale-[1.02] ring-2 ring-blue-100 dark:ring-blue-900/30"
+        : "opacity-60 bg-slate-50 dark:bg-slate-900/50 border-2 border-slate-200 dark:border-slate-800 grayscale-[0.5]";
     }, [board, isActive]);
 
     return (
       <div
-        className={`grid grid-cols-3 gap-1 sm:gap-1.5 w-fit rounded-lg sm:rounded-xl p-2 sm:p-3 smooth-transition transform ${getBoardStatus()}`}
+        className={`grid grid-cols-3 gap-1.5 sm:gap-2 w-fit rounded-xl sm:rounded-2xl p-2.5 sm:p-3 smooth-transition transform ${getBoardStatus()}`}
       >
         {board.map((cell, cellIndex) => (
           <button
             key={cellIndex}
-            className={`group relative inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-sm sm:rounded-md bg-white/40 dark:bg-slate-900/40 border border-slate-300 dark:border-slate-600 ${
+            className={`group relative inline-flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 md:w-11 md:h-11 rounded-md sm:rounded-lg border ${
               isActive && !cell
-                ? "hover:bg-white/80 dark:hover:bg-slate-800/80 cursor-pointer hover:shadow-inner"
-                : ""
-            } ${cell !== null || disabled ? "" : ""} smooth-transition transform ${
-              cell === "X" ? "text-blue-600 dark:text-blue-400" : "text-red-600 dark:text-red-400"
+                ? "bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                : "bg-slate-50 dark:bg-slate-900/50 border-transparent"
+            } ${cell !== null ? "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-inner" : ""} smooth-transition transform ${
+              cell === "X" ? "text-blue-500 dark:text-blue-400" : "text-red-500 dark:text-red-400"
             }`}
             onClick={() => {
               if (disabled) return;
@@ -56,15 +56,15 @@ export const SmallBoard: React.FC<{
           >
             {/* Ghost Hover Effect */}
             {isActive && !cell && !disabled && (
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-20 transition-opacity duration-200">
-                 <div className="w-2 h-2 rounded-full bg-current" />
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                 <div className="w-2 h-2 rounded-full bg-blue-400/50 dark:bg-blue-400/50 animate-pulse" />
               </div>
             )}
 
             {cell === "X" ? (
-              <X className="w-4 h-4 sm:w-6 sm:h-6 animate-scaleIn stroke-[2.5]" />
+              <X className="w-5 h-5 sm:w-6 sm:h-6 animate-scaleIn stroke-[3] drop-shadow-sm" />
             ) : cell === "O" ? (
-              <Circle className="w-4 h-4 sm:w-6 sm:h-6 animate-scaleIn stroke-[2.5]" />
+              <Circle className="w-4 h-4 sm:w-5 sm:h-5 animate-scaleIn stroke-[3] drop-shadow-sm" />
             ) : null}
           </button>
         ))}

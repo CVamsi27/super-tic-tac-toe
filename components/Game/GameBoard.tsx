@@ -40,7 +40,7 @@ export const GameBoard: React.FC<{
   }, [globalBoard, activeBoard]);
 
   return (
-    <div className={`grid grid-cols-3 gap-4 md:gap-8 w-fit`}>
+    <div className="grid grid-cols-3 gap-4 md:gap-8 w-fit p-4 bg-white/30 dark:bg-slate-800/30 backdrop-blur-md rounded-xl border border-blue-200 dark:border-slate-600 shadow-lg smooth-transition">
       {globalBoard.map((board, boardIndex) => (
         <SmallBoard
           userId={userId}

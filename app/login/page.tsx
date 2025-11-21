@@ -30,9 +30,11 @@ export default function LoginPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-full bg-gradient-main flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-main flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto mb-4"></div>
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
+          </div>
           <p className="text-slate-900 text-lg font-semibold">Loading...</p>
         </div>
       </div>
