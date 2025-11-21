@@ -32,8 +32,8 @@ class GameHistoryDB(Base):
     opponent_id = Column(String, nullable=True, index=True)
     opponent_name = Column(String, nullable=True)
     result = Column(String)  # "WIN", "LOSS", "DRAW"
-    points_earned = Column(Integer, default=0)
-    game_duration = Column(Integer)  # in seconds
+    points_earned = Column(Integer, default=0, nullable=True)
+    game_duration = Column(Integer, default=0, nullable=True)  # in seconds
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationship

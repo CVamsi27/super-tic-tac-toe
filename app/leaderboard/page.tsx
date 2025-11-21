@@ -59,110 +59,192 @@ export default function LeaderboardPage() {
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6">
         {/* Header Card */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg p-8 mb-8 text-white">
-          <div className="flex items-center gap-4 mb-4">
-            <Trophy size={40} className="text-yellow-300" />
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg p-6 sm:p-8 mb-8 text-white">
+          <div className="flex items-center gap-3 sm:gap-4 mb-4">
+            <Trophy size={32} className="text-yellow-300 sm:w-10 sm:h-10" />
             <div>
-              <h1 className="text-4xl font-bold">Global Leaderboard</h1>
-              <p className="text-blue-100 mt-2">Compete with players worldwide and earn your place at the top</p>
+              <h1 className="text-2xl sm:text-4xl font-bold">Global Leaderboard</h1>
+              <p className="text-blue-100 mt-1 sm:mt-2 text-sm sm:text-base">Compete with players worldwide and earn your place at the top</p>
             </div>
           </div>
         </div>
 
         {/* Leaderboard Table */}
         {leaderboard.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center">
-            <p className="text-slate-600 text-lg font-semibold">No players yet. Be the first!</p>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 sm:p-12 text-center">
+            <p className="text-slate-600 text-base sm:text-lg font-semibold">No players yet. Be the first!</p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-slate-700 w-16">Rank</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-slate-700">Player</th>
-                    <th className="px-6 py-4 text-right text-sm font-bold text-slate-700">Points</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold text-slate-700">W/L/D</th>
-                    <th className="px-6 py-4 text-right text-sm font-bold text-slate-700">Win%</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {leaderboard.map((user, index) => {
-                    const rank = index + 1;
-                    let rankBg = "";
-                    let rankBadge = "";
+          <>
+            {/* Mobile Card View */}
+            <div className="block md:hidden space-y-3">
+              {leaderboard.map((user, index) => {
+                const rank = index + 1;
+                let rankBadge = "";
+                let cardBg = "bg-white";
 
-                    if (rank === 1) {
-                      rankBg = "bg-yellow-50";
-                      rankBadge = "🥇";
-                    } else if (rank === 2) {
-                      rankBg = "bg-slate-50";
-                      rankBadge = "🥈";
-                    } else if (rank === 3) {
-                      rankBg = "bg-orange-50";
-                      rankBadge = "🥉";
-                    } else {
-                      rankBg = "";
-                      rankBadge = `#${rank}`;
-                    }
+                if (rank === 1) {
+                  rankBadge = "🥇";
+                  cardBg = "bg-gradient-to-br from-yellow-50 to-amber-50";
+                } else if (rank === 2) {
+                  rankBadge = "🥈";
+                  cardBg = "bg-gradient-to-br from-slate-50 to-gray-50";
+                } else if (rank === 3) {
+                  rankBadge = "🥉";
+                  cardBg = "bg-gradient-to-br from-orange-50 to-red-50";
+                } else {
+                  rankBadge = `#${rank}`;
+                  cardBg = "bg-white";
+                }
 
-                    const totalGames = user.wins + user.losses + user.draws;
-                    const winRate = totalGames > 0 ? ((user.wins / totalGames) * 100).toFixed(0) : '0';
+                const totalGames = user.wins + user.losses + user.draws;
+                const winRate = totalGames > 0 ? ((user.wins / totalGames) * 100).toFixed(0) : '0';
 
-                    return (
-                      <tr
-                        key={user.id}
-                        className={`${rankBg} hover:bg-blue-50 transition-colors`}
-                      >
-                        <td className="px-6 py-4">
-                          <span className="text-2xl font-bold text-slate-900">{rankBadge}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            {user.profile_picture && (
-                              <Image
-                                src={user.profile_picture}
-                                alt={user.name}
-                                width={40}
-                                height={40}
-                                className="rounded-full border-2 border-slate-300"
-                              />
-                            )}
-                            <div>
-                              <div className="font-semibold text-slate-900">{user.name}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="text-2xl font-bold text-blue-700">{user.points}</div>
-                          <div className="text-xs text-slate-500">pts</div>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <div className="flex justify-center gap-3 text-sm font-semibold">
-                            <span className="text-green-700">
-                              {user.wins} <span className="text-xs text-slate-500">W</span>
-                            </span>
-                            <span className="text-slate-400">/</span>
-                            <span className="text-red-700">
-                              {user.losses} <span className="text-xs text-slate-500">L</span>
-                            </span>
-                            <span className="text-slate-400">/</span>
-                            <span className="text-yellow-700">
-                              {user.draws} <span className="text-xs text-slate-500">D</span>
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="font-bold text-purple-700 text-lg">{winRate}%</div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                return (
+                  <div
+                    key={user.id}
+                    className={`${cardBg} rounded-xl shadow-sm border border-slate-200 p-4`}
+                  >
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="text-2xl font-bold text-slate-900 min-w-[3rem] text-center">
+                        {rankBadge}
+                      </div>
+                      <div className="flex items-center gap-3 flex-1">
+                        {user.profile_picture && (
+                          <Image
+                            src={user.profile_picture}
+                            alt={user.name}
+                            width={48}
+                            height={48}
+                            className="rounded-full border-2 border-slate-300"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-slate-900 truncate">{user.name}</div>
+                          <div className="text-sm text-slate-600 truncate">{user.email}</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-blue-50 rounded-lg p-3 text-center">
+                        <div className="text-xs text-slate-600 font-semibold mb-1">Points</div>
+                        <div className="text-2xl font-bold text-blue-700">{user.points}</div>
+                      </div>
+                      <div className="bg-purple-50 rounded-lg p-3 text-center">
+                        <div className="text-xs text-slate-600 font-semibold mb-1">Win Rate</div>
+                        <div className="text-2xl font-bold text-purple-700">{winRate}%</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-center gap-4 mt-3 text-sm font-semibold">
+                      <span className="text-green-700">
+                        {user.wins} <span className="text-xs text-slate-500">W</span>
+                      </span>
+                      <span className="text-slate-400">/</span>
+                      <span className="text-red-700">
+                        {user.losses} <span className="text-xs text-slate-500">L</span>
+                      </span>
+                      <span className="text-slate-400">/</span>
+                      <span className="text-yellow-700">
+                        {user.draws} <span className="text-xs text-slate-500">D</span>
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-slate-700 w-16">Rank</th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-slate-700">Player</th>
+                      <th className="px-6 py-4 text-right text-sm font-bold text-slate-700">Points</th>
+                      <th className="px-6 py-4 text-center text-sm font-bold text-slate-700">W/L/D</th>
+                      <th className="px-6 py-4 text-right text-sm font-bold text-slate-700">Win%</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {leaderboard.map((user, index) => {
+                      const rank = index + 1;
+                      let rankBg = "";
+                      let rankBadge = "";
+
+                      if (rank === 1) {
+                        rankBg = "bg-yellow-50";
+                        rankBadge = "🥇";
+                      } else if (rank === 2) {
+                        rankBg = "bg-slate-50";
+                        rankBadge = "🥈";
+                      } else if (rank === 3) {
+                        rankBg = "bg-orange-50";
+                        rankBadge = "🥉";
+                      } else {
+                        rankBg = "";
+                        rankBadge = `#${rank}`;
+                      }
+
+                      const totalGames = user.wins + user.losses + user.draws;
+                      const winRate = totalGames > 0 ? ((user.wins / totalGames) * 100).toFixed(0) : '0';
+
+                      return (
+                        <tr
+                          key={user.id}
+                          className={`${rankBg} hover:bg-blue-50 transition-colors`}
+                        >
+                          <td className="px-6 py-4">
+                            <span className="text-2xl font-bold text-slate-900">{rankBadge}</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              {user.profile_picture && (
+                                <Image
+                                  src={user.profile_picture}
+                                  alt={user.name}
+                                  width={40}
+                                  height={40}
+                                  className="rounded-full border-2 border-slate-300"
+                                />
+                              )}
+                              <div>
+                                <div className="font-semibold text-slate-900">{user.name}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="text-2xl font-bold text-blue-700">{user.points}</div>
+                            <div className="text-xs text-slate-500">pts</div>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <div className="flex justify-center gap-3 text-sm font-semibold">
+                              <span className="text-green-700">
+                                {user.wins} <span className="text-xs text-slate-500">W</span>
+                              </span>
+                              <span className="text-slate-400">/</span>
+                              <span className="text-red-700">
+                                {user.losses} <span className="text-xs text-slate-500">L</span>
+                              </span>
+                              <span className="text-slate-400">/</span>
+                              <span className="text-yellow-700">
+                                {user.draws} <span className="text-xs text-slate-500">D</span>
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="font-bold text-purple-700 text-lg">{winRate}%</div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
         )}
 
         {/* Scoring Info */}

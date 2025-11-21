@@ -19,6 +19,7 @@ interface AuthContextType {
   token: string | null;
   login: (idToken: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -125,8 +126,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(STORAGE_KEYS.USER);
   };
 
+  const refreshUser = async () => {
+    if (!token) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/py/auth/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        // If token is invalid, logout
+        if (response.status === 401) {
+          logout();
+        }
+        throw new Error('Failed to refresh user profile');
+      }
+
+      const userData = await response.json();
+      setUser(userData);
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
+    } catch (error) {
+      console.error('Error refreshing user profile:', error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, refreshUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
