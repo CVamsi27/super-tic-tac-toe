@@ -1,11 +1,11 @@
-import { PlayerType, GameState } from "@/types";
+import { PlayerType, GameState, GameModeType } from "@/types";
 import { Handshake, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 
-export default function WinnerModal({ winner, gameState }: { winner: PlayerType; gameState: GameState | null }) {
+export default function WinnerModal({ winner, gameState, sendMessage, userId }: { winner: PlayerType; gameState: GameState | null; sendMessage: (message: any) => void; userId: string }) {
   const [isOpen, setIsOpen] = useState(true);
   const router = useRouter();
   const { user } = useAuth();
@@ -29,6 +29,21 @@ export default function WinnerModal({ winner, gameState }: { winner: PlayerType;
   };
 
   const userWon = didUserWin();
+
+  const handlePlayAgain = () => {
+    if (gameState && userId) {
+      if (gameState.mode === GameModeType.RANDOM) {
+        router.push("/");
+      } else {
+        sendMessage({
+          type: "reset_game",
+          gameId: gameState.id,
+          userId: userId,
+        });
+        setIsOpen(false);
+      }
+    }
+  };
 
   return (
     isOpen && (
@@ -103,13 +118,19 @@ export default function WinnerModal({ winner, gameState }: { winner: PlayerType;
           <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
             <button
               className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 text-sm sm:text-base"
-              onClick={() => router.push("/")}
+              onClick={handlePlayAgain}
             >
               Play Again
             </button>
             <button
               className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-slate-300 to-slate-400 dark:from-slate-700 dark:to-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-lg hover:from-slate-400 hover:to-slate-500 dark:hover:from-slate-600 dark:hover:to-slate-500 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 text-sm sm:text-base"
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                if (gameState?.mode === GameModeType.RANDOM) {
+                  router.push("/");
+                } else {
+                  setIsOpen(false);
+                }
+              }}
             >
               Close
             </button>

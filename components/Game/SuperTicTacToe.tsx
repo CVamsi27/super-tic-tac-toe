@@ -77,10 +77,12 @@ const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
         >
           <PlayerStatus
             gameId={gameId}
+            userId={userId}
             currentPlayer={gameState?.currentPlayer || null}
             actualPlayer={
               gameState?.players?.find((p) => p?.id === userId) || null
             }
+            sendMessage={sendMessage}
           />
           <div className="flex justify-center">
             <GameBoard

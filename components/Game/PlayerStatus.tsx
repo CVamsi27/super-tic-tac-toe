@@ -8,9 +8,11 @@ import WinnerModal from "./WinnerModal";
 
 export const PlayerStatus: React.FC<{
   gameId: string;
+  userId: string;
   currentPlayer: PlayerType;
   actualPlayer: Player;
-}> = React.memo(({ currentPlayer, gameId, actualPlayer }) => {
+  sendMessage: (message: any) => void;
+}> = React.memo(({ currentPlayer, gameId, actualPlayer, sendMessage, userId }) => {
   const { games } = useGameStore();
   const winner = useMemo<PlayerType>(
     () => games[gameId]?.winner,
@@ -61,7 +63,7 @@ export const PlayerStatus: React.FC<{
         )}
       </div>
 
-      {winner && <WinnerModal winner={winner} gameState={games[gameId]} />}
+      {winner && <WinnerModal winner={winner} gameState={games[gameId]} sendMessage={sendMessage} userId={userId} />}
     </div>
   );
 });

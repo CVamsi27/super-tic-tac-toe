@@ -150,8 +150,8 @@ class AuthService:
                     id=game.id,
                     result=game.result,
                     opponent_name=game.opponent_name,
-                    points_earned=game.points_earned,
-                    game_duration=game.game_duration,
+                    points_earned=game.points_earned or 0,
+                    game_duration=game.game_duration or 0,
                     created_at=game.created_at
                 )
                 for game in games

@@ -248,7 +248,9 @@ class GameService:
             new_game = GameState(
                 id=old_game.id,
                 mode=old_game.mode,
-                current_player=new_current_player
+                current_player=new_current_player,
+                players=old_game.players,
+                watchers_count=old_game.watchers_count
             )
             
             self.games[game_id] = new_game
@@ -259,12 +261,10 @@ class GameService:
                 game_db.global_board = convert_global_board_to_db(new_game.global_board)
                 game_db.current_player = new_current_player
                 game_db.active_board = None
-                game_db.watchers_count = 0
                 game_db.winner = None
                 game_db.last_move_timestamp = None
                 game_db.move_count = 0
-                
-                db.query(PlayerDB).filter(PlayerDB.game_id == game_id).delete()
+                # Watchers count is preserved in the DB as we are not deleting players
                 
                 db.commit()
             
