@@ -399,6 +399,10 @@ class GameService:
                 }
             })
             
+            # If game ended, save results in background (after broadcast)
+            if game.winner is not None:
+                self._save_game_results(game)
+
             # If it's an AI game and there's no winner, make AI move
             if game.mode == GameMode.AI and game.winner is None:
                 await self._make_ai_move(game_id, active_sockets)
@@ -474,6 +478,10 @@ class GameService:
                 }
             })
             
+            # If game ended, save results in background (after broadcast)
+            if game.winner is not None:
+                self._save_game_results(game)
+
         except Exception as e:
             pass
 
@@ -520,6 +528,63 @@ class GameService:
                         await client.send_json({"type": "error", "message": "Failed to reset game"})
                     except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
                         pass
+
+    def _save_game_results(self, game: GameState) -> None:
+        """Save game results and update player stats"""
+        try:
+            with get_db() as db:
+                game_duration = 0
+                if game.last_move_timestamp:
+                    # Calculate game duration (this is approximate, would need start_time for exact calc)
+                    game_duration = game.move_count * 5  # Rough estimate
+                
+                players = game.players
+                player_symbols = {p.id: p.symbol for p in players if p.symbol}
+                
+                # Save result for each player
+                for player_id, player_symbol in player_symbols.items():
+                    # Skip saving for AI player
+                    if player_id.startswith("ai_"):
+                        continue
+
+                    if game.winner == PlayerSymbol.T:
+                        # Draw
+                        result = 'DRAW'
+                        points = 1
+                    elif game.winner == player_symbol:
+                        # Player won
+                        result = 'WIN'
+                        points = 10
+                    else:
+                        # Player lost
+                        result = 'LOSS'
+                        points = -5
+                    
+                    # Find opponent
+                    opponent_name = None
+                    
+                    if game.mode == GameMode.AI:
+                        opponent_name = "AI (Bot)"
+                    else:
+                        for p_id, p_symbol in player_symbols.items():
+                            if p_id != player_id:
+                                opponent_id = p_id
+                                opponent_player = next((p for p in players if p.id == opponent_id), None)
+                                if opponent_player:
+                                    # Get opponent name from database
+                                    opponent_db = db.query(PlayerDB).filter(PlayerDB.id == opponent_id).first()
+                                    if opponent_db:
+                                        opponent_user = db.query(UserDB).filter(UserDB.id == opponent_id).first()
+                                        opponent_name = opponent_user.name if opponent_user else "Unknown"
+                                break
+                    
+                    # Check if user exists in database before saving
+                    user_exists = db.query(UserDB).filter(UserDB.id == player_id).first()
+                    if user_exists:
+                        # Save the game result
+                        auth_service.save_game_result(player_id, result, opponent_name, game_duration, points)
+        except Exception as e:
+            print(f"Error saving game results: {str(e)}")
 
     def make_move(self, game_id: str, move: GameMove) -> GameState:
         game = self._get_game_or_404(game_id)
@@ -581,60 +646,6 @@ class GameService:
             game_db.winner = game.winner
             game_db.last_move_timestamp = datetime.now()
             game_db.move_count = game.move_count
-            
-            # Save game result if game is finished
-            if final_winner is not None:
-                game_duration = 0
-                if game.last_move_timestamp:
-                    # Calculate game duration (this is approximate, would need start_time for exact calc)
-                    game_duration = game.move_count * 5  # Rough estimate
-                
-                players = game.players
-                player_symbols = {p.id: p.symbol for p in players if p.symbol}
-                
-                # Save result for each player
-                for player_id, player_symbol in player_symbols.items():
-                    # Skip saving for AI player
-                    if player_id.startswith("ai_"):
-                        continue
-
-                    if final_winner == PlayerSymbol.T:
-                        # Draw
-                        result = 'DRAW'
-                        points = 1
-                    elif final_winner == player_symbol:
-                        # Player won
-                        result = 'WIN'
-                        points = 10
-                    else:
-                        # Player lost
-                        result = 'LOSS'
-                        points = -5
-                    
-                    # Find opponent
-                    opponent_id = None
-                    opponent_name = None
-                    
-                    if game.mode == GameMode.AI:
-                        opponent_name = "AI (Bot)"
-                    else:
-                        for p_id, p_symbol in player_symbols.items():
-                            if p_id != player_id:
-                                opponent_id = p_id
-                                opponent_player = next((p for p in players if p.id == opponent_id), None)
-                                if opponent_player:
-                                    # Get opponent name from database
-                                    opponent_db = db.query(PlayerDB).filter(PlayerDB.id == opponent_id).first()
-                                    if opponent_db:
-                                        opponent_user = db.query(UserDB).filter(UserDB.id == opponent_id).first()
-                                        opponent_name = opponent_user.name if opponent_user else "Unknown"
-                                break
-                    
-                    # Check if user exists in database before saving
-                    user_exists = db.query(UserDB).filter(UserDB.id == player_id).first()
-                    if user_exists:
-                        # Save the game result
-                        auth_service.save_game_result(player_id, result, opponent_name, game_duration, points)
             
             db.commit()
             

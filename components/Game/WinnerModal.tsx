@@ -67,10 +67,10 @@ export default function WinnerModal({ winner, gameState }: { winner: PlayerType;
                 ) : (
                   <>
                     <p className="text-xl sm:text-2xl font-bold text-slate-700 dark:text-slate-300">
-                      {winnerName ? (
+                      {user?.name ? (
                         <>
                           <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                            {winnerName}
+                            {user.name}
                           </span>
                           {" won the game!"}
                         </>
