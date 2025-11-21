@@ -21,7 +21,7 @@ export default function RootLayout({
         <Providers>
           <main className="relative flex flex-col h-screen overflow-hidden">
             <Navbar />
-            <div className="flex-grow overflow-auto bg-gradient-main">
+            <div className="flex-grow overflow-y-auto overflow-x-hidden bg-gradient-main">
               {children}
             </div>
             <Toaster />
