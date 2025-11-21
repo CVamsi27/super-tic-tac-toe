@@ -17,30 +17,49 @@ export const PlayerStatus: React.FC<{
     () => games[gameId]?.winner,
     [gameId, games],
   );
+
+  const isYourTurn =
+    actualPlayer?.status === "PLAYER" &&
+    currentPlayer === actualPlayer?.symbol &&
+    !winner;
+
+  const getStatusColor = () => {
+    if (winner) return "from-amber-100 to-yellow-200 dark:from-amber-900/40 dark:to-yellow-900/40 border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-200";
+    if (isYourTurn) return "from-green-100 to-emerald-200 dark:from-green-900/40 dark:to-emerald-900/40 border-green-200 dark:border-green-700 text-green-800 dark:text-green-200 animate-pulse-subtle";
+    return "from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400";
+  };
+
+  const getStatusText = () => {
+    if (winner) return winner === actualPlayer?.symbol ? "VICTORY!" : "DEFEAT";
+    if (isYourTurn) return "YOUR TURN";
+    return "OPPONENT'S TURN";
+  };
+
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 sm:mb-6 font-semibold text-base sm:text-lg p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 rounded-lg sm:rounded-xl border border-blue-100 dark:border-slate-600 smooth-transition animate-slideInDown">
-      <div className="flex items-center gap-2 sm:gap-3">
-        <span className="text-slate-700 dark:text-slate-200">Current Player:</span>
-        {currentPlayer === null ? (
-          <Loading />
-        ) : currentPlayer === "X" ? (
-          <X className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400 animate-pulse" />
-        ) : (
-          <Circle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400 animate-pulse" />
+    <div className={`flex flex-col w-full mb-6 smooth-transition animate-slideInDown`}>
+      <div className={`w-full p-4 rounded-xl border-2 bg-gradient-to-r shadow-lg flex items-center justify-between ${getStatusColor()}`}>
+        <div className="flex items-center gap-3">
+          {currentPlayer === "X" ? (
+            <X className={`w-8 h-8 ${isYourTurn ? "animate-bounce" : ""}`} />
+          ) : (
+            <Circle className={`w-8 h-8 ${isYourTurn ? "animate-bounce" : ""}`} />
+          )}
+          <span className="text-sm md:text-base lg:text-2xl font-black tracking-wider">
+            {getStatusText()}
+          </span>
+        </div>
+        
+        {actualPlayer?.status === "PLAYER" && (
+          <div className="flex items-center gap-2 px-3 py-1 bg-white/30 dark:bg-black/20 rounded-lg backdrop-blur-sm">
+            <span className="text-sm font-semibold opacity-80">YOU ARE</span>
+            {actualPlayer.symbol === "X" ? (
+              <X className="w-5 h-5 font-bold" />
+            ) : (
+              <Circle className="w-5 h-5 font-bold" />
+            )}
+          </div>
         )}
       </div>
-      {actualPlayer?.status === "PLAYER" && (
-        <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2 bg-white/50 dark:bg-slate-900/50 rounded-lg">
-          <span className="text-slate-700 dark:text-slate-200">Your Symbol:</span>
-          {actualPlayer === null ? (
-            <Loading />
-          ) : actualPlayer.symbol === "X" ? (
-            <X className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400 font-bold" />
-          ) : (
-            <Circle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400 font-bold" />
-          )}
-        </div>
-      )}
 
       {winner && <WinnerModal winner={winner} gameState={games[gameId]} />}
     </div>

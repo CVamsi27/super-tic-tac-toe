@@ -131,7 +131,15 @@ def cleanup_inactive_games(games: Dict[str, GameState]) -> None:
     
     for game_id in list(games.keys()):
         game = games[game_id]
-        if (game.last_move_timestamp and game.last_move_timestamp < inactive_threshold) or not game.players:
+        # Convert float timestamp to datetime if needed
+        last_move_dt = None
+        if game.last_move_timestamp:
+            if isinstance(game.last_move_timestamp, float):
+                last_move_dt = datetime.fromtimestamp(game.last_move_timestamp)
+            else:
+                last_move_dt = game.last_move_timestamp
+        
+        if (last_move_dt and last_move_dt < inactive_threshold) or not game.players:
             del games[game_id]
     
     with get_db() as db:

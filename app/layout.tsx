@@ -17,9 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
-      <body className={`relative h-full font-sans antialiased bg-gradient-main`}>
+      <body className={`relative h-full font-sans antialiased bg-gradient-main overflow-hidden`}>
         <Providers>
-          <main className="relative flex flex-col min-h-screen">
+          <main className="relative flex flex-col h-full">
             <Navbar />
             <div className="flex-grow flex-1 bg-gradient-main overflow-y-auto overflow-x-hidden" style={{ WebkitOverflowScrolling: 'touch' }}>
               {children}

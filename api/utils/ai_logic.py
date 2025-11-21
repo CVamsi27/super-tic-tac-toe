@@ -81,8 +81,8 @@ class AILogic:
         if smart_move:
             return smart_move
         
-        # Then use minimax for deep strategy
-        return self._get_minimax_move(game, available_moves)
+        # Then use deeper minimax for nearly perfect play
+        return self._get_minimax_move(game, available_moves, depth=4)
 
     def _get_smart_move(
         self, game: GameState, available_moves: List[Tuple[int, int]]
@@ -124,7 +124,7 @@ class AILogic:
         return None
 
     def _get_minimax_move(
-        self, game: GameState, available_moves: List[Tuple[int, int]]
+        self, game: GameState, available_moves: List[Tuple[int, int]], depth: int = 2
     ) -> Tuple[int, int]:
         """Use minimax algorithm to find optimal move"""
         best_move = available_moves[0]
@@ -135,7 +135,7 @@ class AILogic:
             game_copy = self._copy_game(game)
             game_copy.global_board[move[0]][move[1]] = self.ai_symbol
             
-            score = self._minimax(game_copy, depth=2, is_maximizing=False)
+            score = self._minimax(game_copy, depth=depth, is_maximizing=False)
             
             if score > best_score:
                 best_score = score

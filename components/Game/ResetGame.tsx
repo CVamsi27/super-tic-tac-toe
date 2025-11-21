@@ -22,7 +22,6 @@ export const ResetGame: React.FC<ResetGameProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
-  // Listen for game reset completion event
   useEffect(() => {
     const handleResetComplete = (event: Event) => {
       const customEvent = event as CustomEvent;
@@ -38,7 +37,6 @@ export const ResetGame: React.FC<ResetGameProps> = ({
   }, [gameId]);
 
   const handleResetGame = () => {
-    // Prevent multiple simultaneous reset attempts
     if (isLoading) {
       toast.warning("Reset already in progress");
       return;

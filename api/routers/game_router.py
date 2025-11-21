@@ -1,6 +1,7 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 from api.models.game import GameCreateRequest, GameResetRequest
 from api.services.game_service import game_service
+from api.services.matchmaking_service import matchmaking_queue
 
 router = APIRouter()
 
@@ -12,6 +13,50 @@ async def create_game(request: GameCreateRequest):
 @router.post("/reset-game")
 async def reset_game(request: GameResetRequest):
     return game_service.reset_game(request.game_id, request.user_id)
+
+@router.post("/matchmaking/join")
+async def join_matchmaking(user_id: str):
+    """Join matchmaking queue"""
+    try:
+        game_id = matchmaking_queue.join_queue(user_id)
+        if game_id:
+            # Create game for matched players
+            players = matchmaking_queue.get_matched_players(game_id)
+            if players:
+                game = game_service.create_matched_game(game_id, players)
+                return {"status": "matched", "game_id": game_id}
+            else:
+                # If no players found, something went wrong - remove from matched games
+                return {"status": "error", "message": "Failed to match players"}
+        else:
+            position = matchmaking_queue.get_queue_position(user_id)
+            return {"status": "queued", "position": position, "queue_size": matchmaking_queue.get_queue_size()}
+    except Exception as e:
+        # Log the error and return a proper error response
+        print(f"Matchmaking error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Matchmaking failed: {str(e)}")
+
+@router.post("/matchmaking/leave")
+async def leave_matchmaking(user_id: str):
+    """Leave matchmaking queue"""
+    removed = matchmaking_queue.leave_queue(user_id)
+    return {"status": "removed" if removed else "not_in_queue"}
+
+@router.get("/matchmaking/status")
+async def get_matchmaking_status(user_id: str):
+    """Check matchmaking status"""
+    position = matchmaking_queue.get_queue_position(user_id)
+    if position is not None:
+        return {"status": "queued", "position": position, "queue_size": matchmaking_queue.get_queue_size()}
+    
+    # Check if user was matched
+    game_id = matchmaking_queue.get_matched_game(user_id)
+    if game_id:
+        return {"status": "matched", "game_id": game_id}
+    
+    return {"status": "not_queued"}
 
 @router.websocket("/ws/connect")
 async def websocket_endpoint(websocket: WebSocket, game_id: str, user_id: str):

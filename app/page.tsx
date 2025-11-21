@@ -2,7 +2,7 @@ import PlayWith from "@/components/PlayWith/PlayWith";
 
 export default function Home() {
   return (
-    <div className="bg-gradient-main h-full flex items-center justify-start flex-col p-4 sm:p-6 overflow-y-auto">
+    <div className="h-full flex items-center justify-center flex-col p-4 sm:p-6">
       <div className="w-full max-w-lg">
         <div className="text-center mb-6 sm:mb-8 animate-slideInDown">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gradient mb-2 animate-slideInUp">
@@ -16,9 +16,6 @@ export default function Home() {
         <div className="bg-gradient-card rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 shadow-xl border border-slate-200 dark:border-slate-700 animate-scaleIn">
           <div className="flex flex-col justify-between h-full gap-4 sm:gap-6">
             <div className="flex flex-col gap-3 sm:gap-4">
-              <p className="text-center font-semibold text-slate-700 dark:text-slate-300 text-sm sm:text-base">
-                Choose Your Game Mode
-              </p>
               <PlayWith />
             </div>
           </div>

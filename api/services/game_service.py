@@ -121,6 +121,79 @@ class GameService:
         self.games[game.id] = game
         return game
     
+    def create_matched_game(self, game_id: str, players: tuple) -> GameState:
+        """
+        Create a game with both players already assigned (for matchmaking).
+        
+        Args:
+            game_id: ID for the new game
+            players: (player1_id, player2_id) tuple
+            
+        Returns:
+            GameState with both players added
+        """
+        if not players or len(players) != 2:
+            raise ValueError("Exactly 2 players required for matched game")
+        
+        player1_id, player2_id = players
+        
+        game = GameState(id=game_id, mode=GameMode.REMOTE)
+        
+        # Add both players
+        player1 = Player(
+            id=player1_id,
+            symbol=PlayerSymbol.X,
+            status=PlayerStatus.PLAYER,
+            join_order=0
+        )
+        player2 = Player(
+            id=player2_id,
+            symbol=PlayerSymbol.O,
+            status=PlayerStatus.PLAYER,
+            join_order=1
+        )
+        
+        game.players = [player1, player2]
+        game.current_player = PlayerSymbol.X
+        
+        try:
+            with get_db() as db:
+                # First, remove any existing player entries for these users
+                # This handles the case where a user was in a previous game
+                db.query(PlayerDB).filter(PlayerDB.id.in_([player1_id, player2_id])).delete(synchronize_session=False)
+                db.flush()
+                
+                game_db = GameDB(
+                    id=game.id,
+                    mode=GameMode.REMOTE,
+                    global_board=convert_global_board_to_db(game.global_board),
+                    current_player=PlayerSymbol.X,
+                    watchers_count=0
+                )
+                db.add(game_db)
+                db.flush()  # Flush to ensure game_db is persisted before adding players
+                
+                # Add players to database
+                for player in [player1, player2]:
+                    player_db = PlayerDB(
+                        id=player.id,
+                        game_id=game.id,
+                        symbol=player.symbol,
+                        status=player.status,
+                        join_order=player.join_order
+                    )
+                    db.add(player_db)
+                
+                db.commit()
+        except Exception as e:
+            print(f"Error creating matched game: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            raise HTTPException(status_code=500, detail=f"Failed to create matched game: {str(e)}")
+        
+        self.games[game.id] = game
+        return game
+    
     def get_existing_game(self, game_id: str) -> bool:
         if game_id in self.games:
             return True
