@@ -30,6 +30,7 @@ export const PlayerStatus: React.FC<{
   };
 
   const getStatusText = () => {
+    if (winner === "T") return "GAME TIED";
     if (winner) return winner === actualPlayer?.symbol ? "VICTORY!" : "DEFEAT";
     if (isYourTurn) return "YOUR TURN";
     return "OPPONENT'S TURN";

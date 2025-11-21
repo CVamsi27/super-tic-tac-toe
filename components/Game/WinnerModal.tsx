@@ -17,9 +17,7 @@ export default function WinnerModal({ winner, gameState }: { winner: PlayerType;
     
     if (winningPlayer.id.startsWith("ai_")) return "AI";
     
-    if (user && user.id === winningPlayer.id) return user.name;
-    
-    return null;
+    return winningPlayer.name;
   };
 
   const winnerName = getWinnerName();
@@ -67,10 +65,10 @@ export default function WinnerModal({ winner, gameState }: { winner: PlayerType;
                 ) : (
                   <>
                     <p className="text-xl sm:text-2xl font-bold text-slate-700 dark:text-slate-300">
-                      {user?.name ? (
+                      {winnerName ? (
                         <>
                           <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                            {user.name}
+                            {winnerName}
                           </span>
                           {" won the game!"}
                         </>

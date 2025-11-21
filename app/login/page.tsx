@@ -30,7 +30,7 @@ export default function LoginPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-main flex items-center justify-center">
+      <div className="min-h-full bg-gradient-main flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto mb-4"></div>
           <p className="text-slate-900 text-lg font-semibold">Loading...</p>
@@ -40,17 +40,17 @@ export default function LoginPage() {
   }
 
   if (user) {
-    return null; // Will be redirected by useEffect
+    return null;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-main flex items-center justify-center p-4">
+    <div className="min-h-full bg-gradient-main flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-gradient-card backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-slate-200">
           <h1 className="text-3xl font-bold text-gradient mb-2 text-center">Super Tic Tac Toe</h1>
           <p className="text-slate-700 text-center mb-8 font-medium">Sign in to track your progress and compete with others</p>
 
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-4">
             <GoogleLogin
               onSuccess={handleLoginSuccess}
               onError={() => {
@@ -59,10 +59,10 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className="relative mb-8">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-400 to-transparent opacity-30"></div>
+          <div className="relative mb-4">
+            <div className="absolute inset-0"></div>
             <div className="relative flex justify-center">
-              <span className="px-2 bg-gradient-card text-sm text-slate-600 font-semibold">or</span>
+              <span className="px-2 text-sm text-slate-600 font-semibold">OR</span>
             </div>
           </div>
 

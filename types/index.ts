@@ -199,6 +199,7 @@ export interface ErrorWithMessage {
 export const PlayerSchema = z
   .object({
     id: z.string().uuid(),
+    name: z.string().optional(),
     symbol: PlayerSymbol,
     status: PlayerStatusSchema.default("PLAYER"),
   })

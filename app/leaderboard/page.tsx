@@ -45,7 +45,7 @@ export default function LeaderboardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-full bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto mb-4"></div>
           <p className="text-slate-900 text-lg font-semibold">Loading leaderboard...</p>
@@ -55,7 +55,7 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-full bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6">
         {/* Header Card */}

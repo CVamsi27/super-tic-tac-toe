@@ -61,7 +61,7 @@ export default function ProfilePage() {
 
   if (isLoading || historyLoading) {
     return (
-      <div className="min-h-screen bg-gradient-main flex items-center justify-center">
+      <div className="min-h-full bg-gradient-main flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto mb-4"></div>
           <p className="text-slate-900 text-lg font-semibold">Loading...</p>
@@ -78,7 +78,7 @@ export default function ProfilePage() {
   const winRate = totalGames > 0 ? ((user.wins / totalGames) * 100).toFixed(1) : '0.0';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-full bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Main content */}
       <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6">
         {/* Profile Header Card */}

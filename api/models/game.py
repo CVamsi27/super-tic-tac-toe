@@ -18,6 +18,7 @@ class PlayerStatus(str, Enum):
 
 class Player(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: Optional[str] = None
     symbol: Optional[PlayerSymbol] = None
     status: PlayerStatus = PlayerStatus.PLAYER
     join_order: int = 0
