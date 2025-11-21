@@ -48,25 +48,27 @@ const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
             <span className="h-10 text-sm sm:text-base text-slate-600 dark:text-slate-300 font-medium flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-4 rounded-full shadow-sm border border-slate-200 dark:border-slate-700">
               <span className="whitespace-nowrap">Watchers: {gameState?.watchers || 0}</span>
             </span>
-            <ResetGame
-              classname={`${
-                gameState?.players.find((p) => p?.id === userId)?.status ===
-                "WATCHER"
-                  ? "pointer-events-none opacity-50"
-                  : ""
-              } smooth-transition`}
-              gameId={gameId}
-              userId={userId}
-              sendMessage={sendMessage}
-            />
+            {gameState?.mode !== "random" && (
+              <ResetGame
+                classname={`${
+                  gameState?.players?.find((p) => p?.id === userId)?.status ===
+                  "WATCHER"
+                    ? "pointer-events-none opacity-50"
+                    : ""
+                } smooth-transition`}
+                gameId={gameId}
+                userId={userId}
+                sendMessage={sendMessage}
+              />
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent
           className={`gap-4 p-0 ${
-            (gameState?.players.find((p) => p?.id === userId)?.status ===
+            (gameState?.players?.find((p) => p?.id === userId)?.status ===
               "WATCHER" ||
               gameState?.currentPlayer !==
-                gameState?.players.find((p) => p?.id === userId)?.symbol ||
+                gameState?.players?.find((p) => p?.id === userId)?.symbol ||
               gameState?.currentPlayer === null) &&
             gameState.winner === null
               ? "pointer-events-none opacity-80 grayscale-[0.3]"
@@ -77,7 +79,7 @@ const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
             gameId={gameId}
             currentPlayer={gameState?.currentPlayer || null}
             actualPlayer={
-              gameState?.players.find((p) => p?.id === userId) || null
+              gameState?.players?.find((p) => p?.id === userId) || null
             }
           />
           <div className="flex justify-center">

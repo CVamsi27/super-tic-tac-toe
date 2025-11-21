@@ -67,7 +67,9 @@ export interface GameStore {
     moveCount: number,
     winner: PlayerType,
     currentPlayer: PlayerType,
+    players?: Player[],
   ) => void;
+  setGame: (gameId: string, gameState: GameState) => void;
 }
 
 export type GameData = z.infer<typeof GameSchema>;

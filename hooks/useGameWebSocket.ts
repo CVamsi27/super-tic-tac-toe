@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { WebSocketStatus } from "@/types";
 
 export const useGameSocket = (gameId: string, userId: string) => {
-  const { games, addPlayer, updateWatcher, updateGame } = useGameStore();
+  const { games, addPlayer, updateWatcher, updateGame, setGame } = useGameStore();
   const router = useRouter();
   const [status, setStatus] = useState<WebSocketStatus>(
     WebSocketStatus.PENDING,
@@ -55,21 +55,17 @@ export const useGameSocket = (gameId: string, userId: string) => {
             break;
 
           case "player_joined":
-            addPlayer(
-              gameId,
-              {
-                id: message.userId,
-                symbol: message.symbol,
-                status: message.status,
-              },
-              message.watchers_count || 0,
-              message.game_state.global_board,
-              message.game_state.active_board,
-              message.game_state.move_count,
-              message.game_state.winner,
-              message.game_state.current_player,
-              message.mode,
-            );
+            setGame(gameId, {
+              id: gameId,
+              players: message.game_state.players || [],
+              globalBoard: message.game_state.global_board,
+              activeBoard: message.game_state.active_board,
+              watchers: message.watchers_count || 0,
+              winner: message.game_state.winner,
+              moveCount: message.game_state.move_count,
+              currentPlayer: message.game_state.current_player,
+              mode: message.mode,
+            });
             break;
 
           case "game_update":
@@ -80,6 +76,7 @@ export const useGameSocket = (gameId: string, userId: string) => {
               message.game_state.move_count,
               message.game_state.winner,
               message.game_state.current_player,
+              message.game_state.players,
             );
             break;
 
@@ -95,6 +92,7 @@ export const useGameSocket = (gameId: string, userId: string) => {
               message.game_state.move_count,
               message.game_state.winner,
               message.game_state.current_player,
+              message.game_state.players,
             );
             // Dispatch custom event to notify ResetGame component that reset is complete
             window.dispatchEvent(

@@ -17,7 +17,7 @@ export default function WinnerModal({ winner, gameState }: { winner: PlayerType;
     
     if (winningPlayer.id.startsWith("ai_")) return "AI";
     
-    return winningPlayer.name;
+    return `${winningPlayer.name} (${winningPlayer.symbol})`;
   };
 
   const winnerName = getWinnerName();

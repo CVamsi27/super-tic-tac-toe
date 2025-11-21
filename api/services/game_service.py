@@ -283,6 +283,18 @@ class GameService:
         if "game_state" in message:
             game_state = message["game_state"]
             
+            # Convert players list (Pydantic models to dicts)
+            if "players" in game_state and game_state["players"]:
+                game_state["players"] = [
+                    {
+                        "id": p.id,
+                        "name": p.name,
+                        "symbol": p.symbol.value if p.symbol else None,
+                        "status": p.status.value if p.status else None,
+                        "join_order": p.join_order
+                    } for p in game_state["players"]
+                ]
+            
             # Convert global_board
             if "global_board" in game_state and game_state["global_board"]:
                 board = game_state["global_board"]
@@ -344,6 +356,7 @@ class GameService:
                 "mode": self.games[game_id].mode,
                 "ai_difficulty": self.games[game_id].ai_difficulty,
                 "game_state": {
+                    "players": self.games[game_id].players,
                     "global_board": self.games[game_id].global_board,
                     "active_board": self.games[game_id].active_board,
                     "move_count": self.games[game_id].move_count,
@@ -371,6 +384,7 @@ class GameService:
                         "mode": self.games[game_id].mode,
                         "ai_difficulty": self.games[game_id].ai_difficulty,
                         "game_state": {
+                            "players": self.games[game_id].players,
                             "global_board": self.games[game_id].global_board,
                             "active_board": self.games[game_id].active_board,
                             "move_count": self.games[game_id].move_count,
@@ -404,6 +418,7 @@ class GameService:
                 "gameId": game_id,
                 "userId": user_id,
                 "game_state": {
+                    "players": game.players,
                     "global_board": game.global_board,
                     "active_board": game.active_board,
                     "move_count": game.move_count,
@@ -487,6 +502,7 @@ class GameService:
                 "gameId": game_id,
                 "userId": ai_player_id,
                 "game_state": {
+                    "players": game.players,
                     "global_board": game.global_board,
                     "active_board": game.active_board,
                     "move_count": game.move_count,
@@ -525,6 +541,7 @@ class GameService:
                 "gameId": game_id,
                 "message": reset_result["message"],
                 "game_state": {
+                    "players": self.games[game_id].players,
                     "global_board": self.games[game_id].global_board,
                     "active_board": self.games[game_id].active_board,
                     "move_count": self.games[game_id].move_count,
@@ -709,8 +726,10 @@ class GameService:
                         existing_player_db.status = PlayerStatus.PLAYER
                         existing_player_db.join_order = len(game.players)
                         
+                        user = db.query(UserDB).filter(UserDB.id == existing_player_db.id).first()
                         player = Player(
                             id=existing_player_db.id,
+                            name=user.name if user else "Unknown",
                             symbol=existing_player_db.symbol,
                             status=existing_player_db.status,
                             join_order=existing_player_db.join_order

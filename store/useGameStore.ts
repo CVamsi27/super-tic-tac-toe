@@ -47,16 +47,16 @@ export const useGameStore = create<GameStore>()(
         set((state) => {
           const currentGame =
             state.games[gameId] || createInitialGameState(gameId);
-          
+
           // Check if player already exists to avoid duplicates
           const playerExists = playerDetails && currentGame.players.some(
             (p) => p !== null && p.id === playerDetails.id
           );
-          
+
           const updatedPlayers = playerExists
             ? currentGame.players
             : [...(currentGame.players || []), playerDetails];
-          
+
           return {
             games: {
               ...state.games,
@@ -93,6 +93,7 @@ export const useGameStore = create<GameStore>()(
         moveCount,
         winner,
         currentPlayer,
+        players,
       ) =>
         set((state) => ({
           games: {
@@ -104,7 +105,16 @@ export const useGameStore = create<GameStore>()(
               moveCount,
               winner,
               currentPlayer,
+              players: players || state.games[gameId]?.players || [],
             },
+          },
+        })),
+
+      setGame: (gameId: string, gameState: GameState) =>
+        set((state) => ({
+          games: {
+            ...state.games,
+            [gameId]: gameState,
           },
         })),
     }),

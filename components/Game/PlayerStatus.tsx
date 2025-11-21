@@ -3,7 +3,6 @@
 import { Player, PlayerType } from "@/types";
 import { Circle, X } from "lucide-react";
 import React, { useMemo } from "react";
-import { Loading } from "../ui/loading";
 import { useGameStore } from "@/store/useGameStore";
 import WinnerModal from "./WinnerModal";
 
