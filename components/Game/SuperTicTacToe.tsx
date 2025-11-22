@@ -18,7 +18,7 @@ const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
   
   return (
     <div
-      className={`flex flex-col items-center justify-start bg-gradient-main h-full p-3 sm:p-4 md:p-6 overflow-y-auto smooth-transition gap-3 sm:gap-4 md:gap-6 glass`}
+      className={`flex flex-col items-center justify-start bg-gradient-main p-2 sm:p-4 md:p-6 smooth-transition gap-3 sm:gap-4 md:gap-6 glass min-h-full`}
     >
       {isGameReady && !isAIGame && (
         <div className="w-fit max-w-4xl animate-slideInDown">

@@ -27,12 +27,12 @@ export const SmallBoard: React.FC<{
 
     return (
       <div
-        className={`grid grid-cols-3 gap-1.5 sm:gap-2 w-fit rounded-xl sm:rounded-2xl p-2.5 sm:p-3 smooth-transition transform ${getBoardStatus()}`}
+        className={`grid grid-cols-3 gap-1 sm:gap-2 w-fit rounded-xl sm:rounded-2xl p-1.5 sm:p-3 smooth-transition transform ${getBoardStatus()}`}
       >
         {board.map((cell, cellIndex) => (
           <button
             key={cellIndex}
-            className={`group relative inline-flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 md:w-11 md:h-11 rounded-md sm:rounded-lg border ${
+            className={`group relative inline-flex items-center justify-center w-6 h-6 sm:w-9 sm:h-9 md:w-11 md:h-11 rounded-md sm:rounded-lg border ${
               isActive && !cell
                 ? "bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5"
                 : "bg-slate-50 dark:bg-slate-900/50 border-transparent"

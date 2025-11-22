@@ -17,11 +17,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`relative h-screen font-sans antialiased bg-gradient-main overflow-hidden`}>
+      <body className={`relative min-h-screen font-sans antialiased bg-gradient-main`}>
         <Providers>
-          <main className="relative flex flex-col h-screen overflow-hidden">
+          <main className="relative flex flex-col min-h-screen">
             <Navbar />
-            <div className="flex-grow overflow-y-auto overflow-x-hidden bg-gradient-main">
+            <div className="flex-grow bg-gradient-main">
               {children}
             </div>
             <Toaster />
