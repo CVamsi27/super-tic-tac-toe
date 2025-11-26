@@ -2,8 +2,16 @@ from fastapi import APIRouter, Depends, HTTPException, status, Header
 from typing import Optional
 from api.models.auth import GoogleLoginRequest, AuthResponse, UserResponse, GameHistoryResponse, LeaderboardResponse, UserStatsResponse
 from api.services.auth_service import auth_service
+from api.utils.cache import get_leaderboard_cache, get_user_cache
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# Cache instances
+leaderboard_cache = get_leaderboard_cache()
+user_cache = get_user_cache()
 
 def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:
     """Dependency to get current user from JWT token"""
@@ -28,6 +36,9 @@ async def google_login(request: GoogleLoginRequest) -> AuthResponse:
     """Google OAuth login endpoint"""
     user, access_token = auth_service.google_login(request.id_token)
     
+    # Invalidate user cache on login
+    await user_cache.delete(f"user:{user.id}")
+    
     return AuthResponse(
         access_token=access_token,
         user=UserResponse(
@@ -46,7 +57,18 @@ async def google_login(request: GoogleLoginRequest) -> AuthResponse:
 @router.get("/auth/me")
 async def get_current_user(user_id: str = Depends(get_current_user_id)) -> UserResponse:
     """Get current user profile"""
-    return auth_service.get_user_stats(user_id)
+    # Try cache first
+    cache_key = f"user:stats:{user_id}"
+    cached = await user_cache.get(cache_key)
+    if cached:
+        return UserResponse(**cached)
+    
+    result = auth_service.get_user_stats(user_id)
+    
+    # Cache for 5 minutes
+    await user_cache.set(cache_key, result.model_dump(), ttl=300)
+    
+    return result
 
 @router.get("/auth/history")
 async def get_game_history(user_id: str = Depends(get_current_user_id)) -> list[GameHistoryResponse]:
@@ -70,15 +92,52 @@ async def save_game_result(
     elif result == "DRAW":
         points = 1
     
-    return auth_service.save_game_result(user_id, result, opponent_name, game_duration, points)
+    game_result = auth_service.save_game_result(user_id, result, opponent_name, game_duration, points)
+    
+    # Invalidate caches
+    await user_cache.delete(f"user:stats:{user_id}")
+    await leaderboard_cache.invalidate_pattern("leaderboard:")
+    
+    return game_result
 
 @router.get("/leaderboard")
 async def get_leaderboard(limit: int = 100) -> LeaderboardResponse:
-    """Get global leaderboard"""
+    """Get global leaderboard (cached for 60 seconds)"""
+    cache_key = f"leaderboard:top:{limit}"
+    
+    # Try cache first
+    cached = await leaderboard_cache.get(cache_key)
+    if cached:
+        return LeaderboardResponse(users=[UserStatsResponse(**u) for u in cached])
+    
     users = auth_service.get_leaderboard(limit)
+    
+    # Cache for 60 seconds
+    await leaderboard_cache.set(
+        cache_key,
+        [u.model_dump() for u in users],
+        ttl=60
+    )
+    
     return LeaderboardResponse(users=users)
 
 @router.get("/leaderboard/top")
 async def get_top_players(limit: int = 10) -> list[UserStatsResponse]:
-    """Get top players"""
-    return auth_service.get_leaderboard(limit)
+    """Get top players (cached for 60 seconds)"""
+    cache_key = f"leaderboard:players:{limit}"
+    
+    # Try cache first
+    cached = await leaderboard_cache.get(cache_key)
+    if cached:
+        return [UserStatsResponse(**u) for u in cached]
+    
+    users = auth_service.get_leaderboard(limit)
+    
+    # Cache for 60 seconds
+    await leaderboard_cache.set(
+        cache_key,
+        [u.model_dump() for u in users],
+        ttl=60
+    )
+    
+    return users

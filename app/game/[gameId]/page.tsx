@@ -3,7 +3,7 @@
 import SuperTicTacToe from "@/components/Game/SuperTicTacToe";
 import { useEffect, useState } from "react";
 import { nanoid } from "nanoid";
-import { Loading } from "@/components/ui/loading";
+import { GameLoading } from "@/components/GameLoading";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Game() {
@@ -23,7 +23,7 @@ export default function Game() {
     }
   }, [user, authLoading]);
 
-  if (!userId || authLoading) return <Loading />;
+  if (!userId || authLoading) return <GameLoading />;
 
   return <SuperTicTacToe userId={userId} />;
 }

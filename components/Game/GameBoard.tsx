@@ -40,21 +40,26 @@ export const GameBoard: React.FC<{
   }, [globalBoard, activeBoard]);
 
   return (
-    <div className="grid grid-cols-3 gap-2 md:gap-8 w-fit p-2 md:p-4 bg-white/30 dark:bg-slate-800/30 backdrop-blur-md rounded-xl border border-blue-200 dark:border-slate-600 shadow-lg smooth-transition">
-      {globalBoard.map((board, boardIndex) => (
-        <SmallBoard
-          userId={userId}
-          gameId={gameId}
-          key={boardIndex}
-          board={board}
-          boardIndex={boardIndex}
-          isActive={
-            playableBoardIndices.includes(boardIndex) && !games[gameId]?.winner
-          }
-          disabled={!!games[gameId]?.winner}
-          sendMessage={sendMessage}
-        />
-      ))}
+    <div className="relative">
+      {/* Decorative background glow */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-violet-500/10 blur-3xl -z-10 rounded-full scale-110" />
+      
+      <div className="grid grid-cols-3 gap-1.5 xs:gap-2 sm:gap-3 md:gap-4 w-fit p-2 xs:p-3 sm:p-4 md:p-5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xl smooth-transition">
+        {globalBoard.map((board, boardIndex) => (
+          <SmallBoard
+            userId={userId}
+            gameId={gameId}
+            key={boardIndex}
+            board={board}
+            boardIndex={boardIndex}
+            isActive={
+              playableBoardIndices.includes(boardIndex) && !games[gameId]?.winner
+            }
+            disabled={!!games[gameId]?.winner}
+            sendMessage={sendMessage}
+          />
+        ))}
+      </div>
     </div>
   );
 });

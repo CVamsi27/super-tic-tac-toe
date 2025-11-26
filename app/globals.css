@@ -8,30 +8,42 @@
   box-sizing: border-box;
 }
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Gradient backgrounds - Dark theme is MUCH darker, light theme is MUCH lighter */
+body {
+  font-family: "Proxima Nova", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Improved gradient backgrounds */
 .bg-gradient-main {
-  @apply bg-gradient-to-br from-white via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-black;
+  @apply bg-gradient-to-br from-slate-50 via-blue-50/80 to-indigo-100/60 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950;
+  background-attachment: fixed;
 }
 
 .bg-gradient-card {
-  @apply bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-slate-900;
+  @apply bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-slate-800/95 dark:via-slate-800/90 dark:to-slate-900/95;
 }
 
 .bg-gradient-accent {
-  @apply bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-blue-500 dark:to-indigo-600;
+  @apply bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 dark:from-blue-500 dark:via-blue-400 dark:to-indigo-500;
 }
 
 .bg-gradient-hover {
   @apply hover:bg-gradient-to-r hover:from-blue-700 hover:to-indigo-800 dark:hover:from-blue-600 dark:hover:to-indigo-700 transition-all duration-300;
 }
 
-/* Text gradients */
+/* Enhanced text gradients */
 .text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-300 dark:to-indigo-300;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400;
+}
+
+.text-gradient-warm {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500;
 }
 
 /* Smooth transitions */
@@ -39,9 +51,107 @@ body {
   @apply transition-all duration-300 ease-out;
 }
 
-/* Glass effect */
+/* Enhanced glass effect with better blur and borders */
 .glass {
-  @apply backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border border-white/20 dark:border-slate-700/20;
+  @apply backdrop-blur-xl bg-white/90 dark:bg-slate-900/90 border border-white/40 dark:border-slate-700/40 shadow-lg;
+}
+
+.glass-subtle {
+  @apply backdrop-blur-md bg-white/70 dark:bg-slate-900/70 border border-white/30 dark:border-slate-700/30;
+}
+
+/* Card hover effects */
+.card-hover {
+  @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-blue-200 dark:hover:border-blue-800;
+}
+
+/* Interactive element focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900;
+}
+
+/* Mobile touch feedback */
+@media (hover: none) {
+  .touch-feedback {
+    @apply active:scale-95 active:opacity-80;
+  }
+}
+
+/* Glow effects */
+.glow-blue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(59, 130, 246, 0.1);
+}
+
+.glow-green {
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3), 0 0 40px rgba(34, 197, 94, 0.1);
+}
+
+.glow-amber {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3), 0 0 40px rgba(245, 158, 11, 0.1);
+}
+
+/* Animated gradient border */
+.gradient-border {
+  position: relative;
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(135deg, #3b82f6, #8b5cf6, #3b82f6) border-box;
+  border: 2px solid transparent;
+}
+
+.dark .gradient-border {
+  background: linear-gradient(#1e293b, #1e293b) padding-box,
+              linear-gradient(135deg, #3b82f6, #8b5cf6, #3b82f6) border-box;
+}
+
+/* Pulse animation for active elements */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Better scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-100 dark:bg-slate-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 dark:bg-slate-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400 dark:bg-slate-500;
+}
+
+/* Mobile-specific utilities */
+@media (max-width: 640px) {
+  .mobile-safe-area {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .mobile-full-height {
+    min-height: calc(100vh - env(safe-area-inset-bottom) - env(safe-area-inset-top));
+  }
 }
 
 @layer base {
@@ -110,4 +220,128 @@ body {
   html {
     font-family: "Proxima Nova", system-ui, sans-serif;
   }
+}
+
+@layer utilities {
+  /* Safe area padding for mobile */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Backdrop filters */
+  .backdrop-blur-3xl {
+    backdrop-filter: blur(64px);
+  }
+  
+  /* Text shadow utilities */
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+  .text-shadow-lg {
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* Confetti animation */
+@keyframes confetti {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-confetti {
+  animation: confetti linear forwards;
+}
+
+/* Loading bar animation */
+@keyframes loading-bar {
+  0% {
+    width: 0%;
+    margin-left: 0%;
+  }
+  50% {
+    width: 60%;
+    margin-left: 20%;
+  }
+  100% {
+    width: 0%;
+    margin-left: 100%;
+  }
+}
+
+.animate-loading-bar {
+  animation: loading-bar 1.5s ease-in-out infinite;
+}
+
+/* Slide in animation */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+/* Slide up animation */
+@keyframes slideUp {
+  from {
+    transform: translate(-50%, 100%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Float animation for streak particles */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-20px) scale(1.2);
+    opacity: 1;
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }

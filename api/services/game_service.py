@@ -220,6 +220,17 @@ class GameService:
                 
             return game_exists
 
+    def is_game_completed(self, game_id: str) -> bool:
+        """Check if a game is completed (has a winner or is a tie)."""
+        if game_id in self.games:
+            return self.games[game_id].winner is not None
+            
+        with get_db() as db:
+            game_db = db.query(GameDB).filter(GameDB.id == game_id).first()
+            if game_db:
+                return game_db.winner is not None
+        return False  # If game doesn't exist, it's not "completed" (likely a new match)
+
     def reset_game(self, game_id: str, user_id: str) -> dict:
         # Prevent duplicate reset requests for the same game
         if game_id in self.reset_in_progress:
@@ -567,8 +578,158 @@ class GameService:
                     except (ConnectionClosedError, ConnectionClosedOK, WebSocketDisconnect):
                         pass
 
+    def _calculate_game_closeness(self, game: GameState, player_symbol: PlayerSymbol) -> dict:
+        """
+        Calculate how close the game was based on board control and patterns.
+        Returns a dict with closeness metrics.
+        """
+        from api.utils.game_logic import check_board_winner
+        
+        player_boards_won = 0
+        opponent_boards_won = 0
+        tied_boards = 0
+        player_near_wins = 0  # Boards where player had 2 in a row
+        opponent_near_wins = 0  # Boards where opponent had 2 in a row
+        
+        opponent_symbol = PlayerSymbol.O if player_symbol == PlayerSymbol.X else PlayerSymbol.X
+        
+        win_patterns = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],  # Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],  # Columns
+            [0, 4, 8], [2, 4, 6]  # Diagonals
+        ]
+        
+        local_board_winners = []
+        
+        for board_idx, board in enumerate(game.global_board):
+            winner = check_board_winner(board)
+            local_board_winners.append(winner)
+            
+            if winner == player_symbol:
+                player_boards_won += 1
+            elif winner == opponent_symbol:
+                opponent_boards_won += 1
+            elif winner == PlayerSymbol.T:
+                tied_boards += 1
+            
+            # Check for near-wins (2 in a row with empty third)
+            for pattern in win_patterns:
+                cells = [board[i] for i in pattern]
+                player_count = cells.count(player_symbol)
+                opponent_count = cells.count(opponent_symbol)
+                empty_count = cells.count(None)
+                
+                if player_count == 2 and empty_count == 1:
+                    player_near_wins += 1
+                if opponent_count == 2 and empty_count == 1:
+                    opponent_near_wins += 1
+        
+        # Check global board for near-wins (2 boards in a row)
+        global_player_near_wins = 0
+        global_opponent_near_wins = 0
+        
+        for pattern in win_patterns:
+            boards = [local_board_winners[i] for i in pattern]
+            player_count = sum(1 for b in boards if b == player_symbol)
+            opponent_count = sum(1 for b in boards if b == opponent_symbol)
+            none_or_tie_count = sum(1 for b in boards if b is None or b == PlayerSymbol.T)
+            
+            if player_count == 2 and none_or_tie_count >= 1:
+                global_player_near_wins += 1
+            if opponent_count == 2 and none_or_tie_count >= 1:
+                global_opponent_near_wins += 1
+        
+        return {
+            "player_boards_won": player_boards_won,
+            "opponent_boards_won": opponent_boards_won,
+            "tied_boards": tied_boards,
+            "board_difference": player_boards_won - opponent_boards_won,
+            "player_near_wins": player_near_wins,
+            "opponent_near_wins": opponent_near_wins,
+            "global_player_near_wins": global_player_near_wins,
+            "global_opponent_near_wins": global_opponent_near_wins,
+            "move_count": game.move_count,
+            "total_boards_decided": player_boards_won + opponent_boards_won + tied_boards
+        }
+
+    def _calculate_points(self, game: GameState, player_symbol: PlayerSymbol, result: str) -> int:
+        """
+        Calculate points based on game result and how close the game was.
+        
+        Scoring factors:
+        - Base points for win/loss/draw
+        - Bonus/reduction based on board control dominance
+        - Bonus for close games (opponent was near winning)
+        - Bonus for quick decisive wins
+        - Reduced penalty for close losses
+        """
+        closeness = self._calculate_game_closeness(game, player_symbol)
+        
+        # Base points
+        if result == "WIN":
+            base_points = 10
+            
+            # Dominant victory bonus (won significantly more boards)
+            if closeness["board_difference"] >= 4:
+                base_points += 5  # Dominant win bonus
+            elif closeness["board_difference"] >= 2:
+                base_points += 2  # Good control bonus
+            
+            # Close game bonus (opponent was threatening)
+            if closeness["global_opponent_near_wins"] >= 2:
+                base_points += 3  # Hard-fought victory
+            elif closeness["opponent_near_wins"] >= 5:
+                base_points += 2  # Opponent was competitive
+            
+            # Quick win bonus
+            if closeness["move_count"] <= 20:
+                base_points += 5  # Speed bonus
+            elif closeness["move_count"] <= 30:
+                base_points += 2  # Efficient play
+            
+            # AI difficulty bonus (handled elsewhere, but check for hard-fought AI)
+            if game.mode == GameMode.AI:
+                if closeness["opponent_boards_won"] >= 2:
+                    base_points += 2  # AI put up a fight
+                    
+        elif result == "LOSS":
+            base_points = -5
+            
+            # Reduced penalty for close games
+            if closeness["board_difference"] >= -1:
+                base_points += 2  # Very close loss
+            elif closeness["board_difference"] >= -2:
+                base_points += 1  # Competitive loss
+            
+            # Fought hard bonus
+            if closeness["global_player_near_wins"] >= 2:
+                base_points += 2  # Almost won
+            elif closeness["player_near_wins"] >= 5:
+                base_points += 1  # Showed effort
+            
+            # Long game reduction (showed persistence)
+            if closeness["move_count"] >= 50:
+                base_points += 1  # Persistence bonus
+                
+        elif result == "DRAW":
+            base_points = 3  # Increased base for draw
+            
+            # Bonus for competitive draw
+            if closeness["board_difference"] == 0:
+                base_points += 2  # Perfectly matched
+            elif abs(closeness["board_difference"]) <= 1:
+                base_points += 1  # Very close
+            
+            # Long game draw bonus
+            if closeness["move_count"] >= 50:
+                base_points += 2  # Epic battle
+            elif closeness["move_count"] >= 40:
+                base_points += 1  # Good game
+        
+        return base_points
+
     def _save_game_results(self, game: GameState) -> None:
-        """Save game results and update player stats"""
+        """Save game results and update player stats with closeness-based scoring"""
         try:
             with get_db() as db:
                 game_duration = 0
@@ -588,15 +749,15 @@ class GameService:
                     if game.winner == PlayerSymbol.T:
                         # Draw
                         result = 'DRAW'
-                        points = 1
                     elif game.winner == player_symbol:
                         # Player won
                         result = 'WIN'
-                        points = 10
                     else:
                         # Player lost
                         result = 'LOSS'
-                        points = -5
+                    
+                    # Calculate points based on game closeness
+                    points = self._calculate_points(game, player_symbol, result)
                     
                     # Find opponent
                     opponent_name = None

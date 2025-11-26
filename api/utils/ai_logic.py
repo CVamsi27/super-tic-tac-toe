@@ -6,15 +6,51 @@ Strategy:
 - Easy: Random moves with occasional smart plays
 - Medium: Mix of strategic and random moves
 - Hard: Optimal minimax-based play with alpha-beta pruning
+
+Performance optimizations:
+- Move ordering for better alpha-beta pruning
+- Transposition table for caching evaluated positions
+- Iterative deepening for time-constrained search
 """
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 from api.models.game import GameState, PlayerSymbol
 import random
+import hashlib
+import time
+
+
+class TranspositionTable:
+    """Cache for storing evaluated positions to avoid recomputation"""
+    
+    def __init__(self, max_size: int = 10000):
+        self._cache: Dict[str, Tuple[float, int]] = {}
+        self._max_size = max_size
+    
+    def get(self, key: str, depth: int) -> Optional[float]:
+        """Get cached score if depth is sufficient"""
+        if key in self._cache:
+            score, cached_depth = self._cache[key]
+            if cached_depth >= depth:
+                return score
+        return None
+    
+    def set(self, key: str, score: float, depth: int):
+        """Store score with depth"""
+        if len(self._cache) >= self._max_size:
+            # Simple eviction: clear half the cache
+            keys = list(self._cache.keys())[:self._max_size // 2]
+            for k in keys:
+                del self._cache[k]
+        self._cache[key] = (score, depth)
+    
+    def clear(self):
+        """Clear the cache"""
+        self._cache.clear()
 
 
 class AILogic:
-    """AI player for Super Tic Tac Toe"""
+    """AI player for Super Tic Tac Toe with optimized performance"""
 
     def __init__(self, difficulty: str = "medium"):
         """
@@ -26,6 +62,9 @@ class AILogic:
         self.difficulty = difficulty.lower()
         self.ai_symbol = PlayerSymbol.O
         self.human_symbol = PlayerSymbol.X
+        self._transposition_table = TranspositionTable()
+        self._nodes_evaluated = 0
+        self._max_time = 2.0  # Maximum seconds for a move
 
     def get_next_move(
         self, game: GameState, available_moves: List[Tuple[int, int]]
@@ -42,6 +81,9 @@ class AILogic:
         """
         if not available_moves:
             raise ValueError("No available moves")
+        
+        # Reset stats
+        self._nodes_evaluated = 0
         
         if self.difficulty == "easy":
             return self._get_easy_move(game, available_moves)
@@ -81,8 +123,8 @@ class AILogic:
         if smart_move:
             return smart_move
         
-        # Then use deeper minimax for nearly perfect play
-        return self._get_minimax_move(game, available_moves, depth=4)
+        # Use iterative deepening for time-constrained optimal play
+        return self._get_iterative_deepening_move(game, available_moves)
 
     def _get_smart_move(
         self, game: GameState, available_moves: List[Tuple[int, int]]
@@ -111,7 +153,6 @@ class AILogic:
                 return move
         
         # Priority 3: Prefer center positions
-        # If in specific board, prefer center of that board
         center_moves = [m for m in available_moves if m[1] == 4]
         if center_moves:
             return center_moves[0]
@@ -122,6 +163,63 @@ class AILogic:
             return corner_moves[0]
         
         return None
+
+    def _get_iterative_deepening_move(
+        self, game: GameState, available_moves: List[Tuple[int, int]]
+    ) -> Tuple[int, int]:
+        """Use iterative deepening with time limit for optimal move"""
+        start_time = time.time()
+        best_move = available_moves[0]
+        
+        # Order moves for better pruning
+        ordered_moves = self._order_moves(game, available_moves)
+        
+        # Iterative deepening from depth 1 to max
+        for depth in range(1, 6):
+            if time.time() - start_time > self._max_time:
+                break
+            
+            move = self._get_minimax_move(game, ordered_moves, depth)
+            if move:
+                best_move = move
+        
+        return best_move
+
+    def _order_moves(
+        self, game: GameState, moves: List[Tuple[int, int]]
+    ) -> List[Tuple[int, int]]:
+        """
+        Order moves for better alpha-beta pruning.
+        Winning moves first, then center, then corners, then edges.
+        """
+        scored_moves = []
+        
+        for move in moves:
+            board_idx, cell_idx = move
+            board = game.global_board[board_idx]
+            score = 0
+            
+            # Winning moves get highest priority
+            if self._is_winning_move(board, cell_idx, self.ai_symbol):
+                score = 1000
+            # Blocking moves get second priority
+            elif self._is_blocking_move(board, cell_idx, self.human_symbol):
+                score = 500
+            # Center positions
+            elif cell_idx == 4:
+                score = 100
+            # Corners
+            elif cell_idx in [0, 2, 6, 8]:
+                score = 50
+            # Edges
+            else:
+                score = 10
+            
+            scored_moves.append((move, score))
+        
+        # Sort by score descending
+        scored_moves.sort(key=lambda x: x[1], reverse=True)
+        return [move for move, _ in scored_moves]
 
     def _get_minimax_move(
         self, game: GameState, available_moves: List[Tuple[int, int]], depth: int = 2
@@ -143,6 +241,17 @@ class AILogic:
         
         return best_move
 
+    def _get_position_hash(self, game: GameState) -> str:
+        """Generate a hash for the current board position"""
+        board_str = ""
+        for board in game.global_board:
+            for cell in board:
+                if cell is None:
+                    board_str += "."
+                else:
+                    board_str += cell.value
+        return hashlib.md5(board_str.encode()).hexdigest()[:16]
+
     def _minimax(
         self, 
         game: GameState, 
@@ -152,9 +261,16 @@ class AILogic:
         beta: float = float('inf')
     ) -> float:
         """
-        Minimax with alpha-beta pruning.
+        Minimax with alpha-beta pruning and transposition table.
         Evaluates positions up to specified depth.
         """
+        self._nodes_evaluated += 1
+        
+        # Check transposition table
+        pos_hash = self._get_position_hash(game)
+        cached = self._transposition_table.get(pos_hash, depth)
+        if cached is not None:
+            return cached
         
         # Check terminal states
         winner = self._get_game_winner(game)
@@ -167,12 +283,20 @@ class AILogic:
         
         # Depth limit - evaluate position
         if depth == 0:
-            return self._evaluate_position(game)
+            score = self._evaluate_position(game)
+            self._transposition_table.set(pos_hash, score, depth)
+            return score
         
-        # Get available moves
+        # Get available moves (ordered for better pruning)
         available = self._get_available_moves_static(game)
         if not available:
-            return self._evaluate_position(game)
+            score = self._evaluate_position(game)
+            self._transposition_table.set(pos_hash, score, depth)
+            return score
+        
+        # Order moves for better pruning in deeper search
+        if depth >= 2:
+            available = self._order_moves(game, available)
         
         if is_maximizing:
             # AI's turn - maximize score
@@ -185,6 +309,7 @@ class AILogic:
                 alpha = max(alpha, eval_score)
                 if beta <= alpha:
                     break  # Pruning
+            self._transposition_table.set(pos_hash, max_eval, depth)
             return max_eval
         else:
             # Human's turn - minimize score
@@ -197,6 +322,7 @@ class AILogic:
                 beta = min(beta, eval_score)
                 if beta <= alpha:
                     break  # Pruning
+            self._transposition_table.set(pos_hash, min_eval, depth)
             return min_eval
 
     def _evaluate_position(self, game: GameState) -> float:

@@ -15,10 +15,21 @@ export type SmallBoardType = z.infer<typeof SmallBoardSchema>;
 export const GameBoardSchema = z.array(SmallBoardSchema);
 export type GameBoardType = z.infer<typeof GameBoardSchema>;
 
+// Classic (3x3) board type
+export const ClassicBoardSchema = z.array(PlayerSymbol);
+export type ClassicBoardType = z.infer<typeof ClassicBoardSchema>;
+
+// Game version: Classic 3x3 or Super 9x9
+export enum GameVersion {
+  CLASSIC = "classic",
+  SUPER = "super",
+}
+
 export enum GameModeType {
   REMOTE = "remote",
   AI = "ai",
   RANDOM = "random",
+  LOCAL = "local", // For local 2-player classic mode
 }
 
 export enum WebSocketStatus {
