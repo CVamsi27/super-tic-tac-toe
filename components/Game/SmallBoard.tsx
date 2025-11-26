@@ -20,12 +20,12 @@ export const SmallBoard: React.FC<{
     const getBoardStatus = useCallback(() => {
       if (board.every((cell) => cell === board[0] && cell !== null)) {
         return board[0] === "X"
-          ? "bg-gradient-to-br from-blue-100 via-blue-50 to-blue-100 dark:from-blue-900/50 dark:via-blue-800/40 dark:to-blue-900/50 shadow-lg shadow-blue-200/50 dark:shadow-blue-900/30 border-2 border-blue-300 dark:border-blue-600 ring-2 ring-blue-200/50 dark:ring-blue-700/30"
-          : "bg-gradient-to-br from-rose-100 via-red-50 to-rose-100 dark:from-rose-900/50 dark:via-red-800/40 dark:to-rose-900/50 shadow-lg shadow-rose-200/50 dark:shadow-rose-900/30 border-2 border-rose-300 dark:border-rose-600 ring-2 ring-rose-200/50 dark:ring-rose-700/30";
+          ? "bg-gradient-to-br from-blue-200 via-blue-100 to-blue-200 dark:from-blue-800/70 dark:via-blue-700/60 dark:to-blue-800/70 shadow-lg shadow-blue-300/50 dark:shadow-blue-800/40 border-2 border-blue-400 dark:border-blue-500 ring-2 ring-blue-300/50 dark:ring-blue-600/40"
+          : "bg-gradient-to-br from-rose-200 via-red-100 to-rose-200 dark:from-rose-800/70 dark:via-red-700/60 dark:to-rose-800/70 shadow-lg shadow-rose-300/50 dark:shadow-rose-800/40 border-2 border-rose-400 dark:border-rose-500 ring-2 ring-rose-300/50 dark:ring-rose-600/40";
       }
       return isActive
-        ? "bg-white dark:bg-slate-800 shadow-xl shadow-blue-200/40 dark:shadow-blue-900/20 border-2 border-blue-400 dark:border-blue-500 ring-4 ring-blue-100 dark:ring-blue-900/40 scale-[1.03]"
-        : "opacity-50 bg-slate-100/80 dark:bg-slate-900/60 border-2 border-slate-200 dark:border-slate-800 grayscale-[0.4]";
+        ? "bg-white dark:bg-slate-700 shadow-xl shadow-blue-300/50 dark:shadow-blue-700/30 border-2 border-blue-500 dark:border-blue-400 ring-4 ring-blue-200 dark:ring-blue-600/50 scale-[1.02]"
+        : "opacity-60 bg-slate-100/80 dark:bg-slate-800/80 border-2 border-slate-300 dark:border-slate-600 grayscale-[0.3]";
     }, [board, isActive]);
 
     const handleCellClick = useCallback((cellIndex: number) => {
@@ -48,17 +48,17 @@ export const SmallBoard: React.FC<{
 
     return (
       <div
-        className={`grid grid-cols-3 gap-0.5 sm:gap-1.5 w-fit rounded-xl sm:rounded-2xl p-1 sm:p-2.5 smooth-transition transform ${getBoardStatus()}`}
+        className={`grid grid-cols-3 gap-1 sm:gap-1.5 w-fit rounded-xl sm:rounded-2xl p-1.5 sm:p-2.5 smooth-transition transform ${getBoardStatus()}`}
       >
         {board.map((cell, cellIndex) => (
           <button
             key={cellIndex}
-            className={`group relative inline-flex items-center justify-center w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl ${
+            className={`group relative inline-flex items-center justify-center w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-lg sm:rounded-xl ${
               isActive && !cell
-                ? "bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 border border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer shadow-sm hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
-                : "bg-slate-50/80 dark:bg-slate-900/50 border border-transparent"
-            } ${cell !== null ? "bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-inner" : ""} smooth-transition transform ${
-              cell === "X" ? "text-blue-600 dark:text-blue-400" : "text-rose-500 dark:text-rose-400"
+                ? "bg-white dark:bg-slate-600 hover:bg-blue-50 dark:hover:bg-blue-800/50 border-2 border-slate-300 dark:border-slate-500 hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+                : "bg-slate-100/80 dark:bg-slate-700/60 border-2 border-slate-200 dark:border-slate-600"
+            } ${cell !== null ? "bg-white dark:bg-slate-600 border-2 border-slate-300 dark:border-slate-500 shadow-inner" : ""} smooth-transition transform ${
+              cell === "X" ? "text-blue-600 dark:text-blue-300" : "text-rose-500 dark:text-rose-300"
             }`}
             onClick={() => handleCellClick(cellIndex)}
             disabled={cell !== null || disabled}
@@ -66,14 +66,14 @@ export const SmallBoard: React.FC<{
             {/* Ghost Hover Effect */}
             {isActive && !cell && !disabled && (
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
-                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gradient-to-r from-blue-400 to-indigo-400 animate-pulse shadow-lg shadow-blue-400/50" />
+                <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-gradient-to-r from-blue-400 to-indigo-400 dark:from-blue-300 dark:to-indigo-300 animate-pulse shadow-lg shadow-blue-400/50" />
               </div>
             )}
 
             {cell === "X" ? (
-              <X className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 animate-scaleIn stroke-[2.5] sm:stroke-[3] drop-shadow-sm" />
+              <X className="w-5 h-5 xs:w-6 xs:h-6 sm:w-6 sm:h-6 md:w-7 md:h-7 animate-scaleIn stroke-[3] drop-shadow-md dark:drop-shadow-[0_2px_3px_rgba(147,197,253,0.3)]" />
             ) : cell === "O" ? (
-              <Circle className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 animate-scaleIn stroke-[2.5] sm:stroke-[3] drop-shadow-sm" />
+              <Circle className="w-4 h-4 xs:w-5 xs:h-5 sm:w-5 sm:h-5 md:w-6 md:h-6 animate-scaleIn stroke-[3] drop-shadow-md dark:drop-shadow-[0_2px_3px_rgba(253,164,175,0.3)]" />
             ) : null}
           </button>
         ))}

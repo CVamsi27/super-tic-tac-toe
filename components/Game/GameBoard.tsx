@@ -44,7 +44,7 @@ export const GameBoard: React.FC<{
       {/* Decorative background glow */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-violet-500/10 blur-3xl -z-10 rounded-full scale-110" />
       
-      <div className="grid grid-cols-3 gap-1.5 xs:gap-2 sm:gap-3 md:gap-4 w-fit p-2 xs:p-3 sm:p-4 md:p-5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xl smooth-transition">
+      <div className="grid grid-cols-3 gap-2 xs:gap-2.5 sm:gap-3 md:gap-4 w-fit p-2.5 xs:p-3 sm:p-4 md:p-5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl border-2 border-slate-300/80 dark:border-slate-600/80 shadow-2xl smooth-transition">
         {globalBoard.map((board, boardIndex) => (
           <SmallBoard
             userId={userId}
