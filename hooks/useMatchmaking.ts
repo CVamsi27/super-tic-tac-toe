@@ -22,6 +22,15 @@ export function useMatchmaking(userId: string) {
             const response = await fetch(`/api/py/game/matchmaking/join?user_id=${userId}`, {
                 method: 'POST',
             });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Matchmaking error:', response.status, errorText);
+                toast.error('Matchmaking failed', { description: `Server returned ${response.status}` });
+                setIsSearching(false);
+                return;
+            }
+            
             const data: MatchmakingStatus = await response.json();
 
             if (data.status === 'matched' && data.game_id) {
@@ -32,9 +41,13 @@ export function useMatchmaking(userId: string) {
                 setQueueSize(data.queue_size ?? 0);
                 toast.info('Searching for opponent...');
                 startPolling();
+            } else if (data.status === 'error') {
+                toast.error('Matchmaking error', { description: (data as any).message || 'Unknown error' });
+                setIsSearching(false);
             }
         } catch (error) {
-            toast.error('Failed to join matchmaking');
+            console.error('Matchmaking exception:', error);
+            toast.error('Failed to join matchmaking', { description: 'Make sure the server is running' });
             setIsSearching(false);
         }
     };
@@ -57,9 +70,25 @@ export function useMatchmaking(userId: string) {
     const startPolling = () => {
         if (pollingInterval.current) return;
 
+        let errorCount = 0;
+        const maxErrors = 3;
+
         pollingInterval.current = setInterval(async () => {
             try {
                 const response = await fetch(`/api/py/game/matchmaking/status?user_id=${userId}`);
+                
+                if (!response.ok) {
+                    errorCount++;
+                    console.error('Polling status error:', response.status);
+                    if (errorCount >= maxErrors) {
+                        stopPolling();
+                        setIsSearching(false);
+                        toast.error('Connection lost', { description: 'Please try again' });
+                    }
+                    return;
+                }
+                
+                errorCount = 0; // Reset on success
                 const data: MatchmakingStatus = await response.json();
 
                 if (data.status === 'matched' && data.game_id) {
@@ -74,7 +103,13 @@ export function useMatchmaking(userId: string) {
                     setIsSearching(false);
                 }
             } catch (error) {
+                errorCount++;
                 console.error('Polling error:', error);
+                if (errorCount >= maxErrors) {
+                    stopPolling();
+                    setIsSearching(false);
+                    toast.error('Connection lost', { description: 'Please try again' });
+                }
             }
         }, 2000); // Poll every 2 seconds
     };

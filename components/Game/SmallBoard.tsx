@@ -20,12 +20,12 @@ export const SmallBoard: React.FC<{
     const getBoardStatus = useCallback(() => {
       if (board.every((cell) => cell === board[0] && cell !== null)) {
         return board[0] === "X"
-          ? "bg-gradient-to-br from-blue-100 via-blue-50 to-blue-100 dark:from-blue-800/70 dark:via-blue-700/60 dark:to-blue-800/70 shadow-md dark:shadow-lg dark:shadow-blue-800/40 border-2 border-blue-400 dark:border-blue-500 ring-2 ring-blue-200/50 dark:ring-blue-600/40"
-          : "bg-gradient-to-br from-rose-100 via-rose-50 to-rose-100 dark:from-rose-800/70 dark:via-red-700/60 dark:to-rose-800/70 shadow-md dark:shadow-lg dark:shadow-rose-800/40 border-2 border-rose-400 dark:border-rose-500 ring-2 ring-rose-200/50 dark:ring-rose-600/40";
+          ? "bg-gradient-to-br from-blue-100 via-blue-50 to-blue-100 dark:from-blue-900 dark:via-blue-800 dark:to-blue-900 shadow-md dark:shadow-lg dark:shadow-blue-500/30 border-2 border-blue-400 dark:border-blue-400 ring-2 ring-blue-200/50 dark:ring-blue-500/50"
+          : "bg-gradient-to-br from-rose-100 via-rose-50 to-rose-100 dark:from-rose-900 dark:via-rose-800 dark:to-rose-900 shadow-md dark:shadow-lg dark:shadow-rose-500/30 border-2 border-rose-400 dark:border-rose-400 ring-2 ring-rose-200/50 dark:ring-rose-500/50";
       }
       return isActive
-        ? "bg-white dark:bg-slate-700 shadow-lg dark:shadow-xl dark:shadow-blue-700/30 border-2 border-blue-500 dark:border-blue-400 ring-2 ring-blue-100 dark:ring-4 dark:ring-blue-600/50 scale-[1.02]"
-        : "bg-slate-50 dark:bg-slate-800/80 border-2 border-slate-200 dark:border-slate-600 shadow-sm dark:opacity-60 dark:grayscale-[0.3]";
+        ? "bg-white dark:bg-slate-600 shadow-lg dark:shadow-xl dark:shadow-blue-500/40 border-2 border-blue-500 dark:border-blue-400 ring-2 ring-blue-100 dark:ring-4 dark:ring-blue-400/60 scale-[1.02]"
+        : "bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 shadow-sm opacity-50 dark:opacity-40";
     }, [board, isActive]);
 
     const handleCellClick = useCallback((cellIndex: number) => {
