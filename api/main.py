@@ -6,6 +6,7 @@ from api.services.game_service import game_service
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from contextlib import asynccontextmanager
+from datetime import datetime
 import logging
 import time
 
@@ -199,18 +200,17 @@ async def health_check():
     }
     
     return {
-        "status": status_map.get(health_report["status"], "unknown"),
-        "timestamp": health_report["timestamp"],
-        "version": "2.0.0",
-        "uptime_seconds": health_report["uptime_seconds"],
+        "status": status_map.get(health_report.status, "unknown"),
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": health_report.version,
+        "uptime_seconds": round(health_report.uptime_seconds, 2),
         "components": {
-            name: {
-                "status": status_map.get(comp["status"], "unknown"),
-                "latency_ms": comp["latency_ms"],
-                "message": comp.get("message"),
-                "last_check": comp["last_check"]
+            comp.name: {
+                "status": status_map.get(comp.status, "unknown"),
+                "message": comp.message,
+                "last_check": comp.last_check.isoformat()
             }
-            for name, comp in health_report["components"].items()
+            for comp in health_report.components
         }
     }
 

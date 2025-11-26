@@ -24,7 +24,7 @@ const Navbar = () => {
             <Gamepad2 size={24} className="text-blue-600 dark:text-blue-400 sm:w-7 sm:h-7 group-hover:rotate-12 transition-transform duration-300" />
             <div className="absolute inset-0 bg-blue-400/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </div>
-          <span className="hidden xs:inline">Super TTT</span>
+          <span className="hidden xs:inline">Super T3</span>
         </Link>
 
         <div className="flex items-center gap-1.5 sm:gap-3">

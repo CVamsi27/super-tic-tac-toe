@@ -48,32 +48,34 @@ export const SmallBoard: React.FC<{
 
     return (
       <div
-        className={`grid grid-cols-3 gap-1 sm:gap-1.5 w-fit rounded-xl sm:rounded-2xl p-1.5 sm:p-2.5 smooth-transition transform ${getBoardStatus()}`}
+        className={`grid grid-cols-3 w-fit rounded-lg sm:rounded-2xl smooth-transition transform ${getBoardStatus()}`}
+        style={{ gap: 'var(--cell-gap)', padding: 'var(--board-padding)' }}
       >
         {board.map((cell, cellIndex) => (
           <button
             key={cellIndex}
-            className={`group relative inline-flex items-center justify-center w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-lg sm:rounded-xl ${
+            className={`group relative inline-flex items-center justify-center rounded sm:rounded-xl ${
               isActive && !cell
-                ? "bg-white dark:bg-slate-600 hover:bg-blue-50 dark:hover:bg-blue-800/50 border-2 border-slate-300 dark:border-slate-500 hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
-                : "bg-slate-100/80 dark:bg-slate-700/60 border-2 border-slate-200 dark:border-slate-600"
-            } ${cell !== null ? "bg-white dark:bg-slate-600 border-2 border-slate-300 dark:border-slate-500 shadow-inner" : ""} smooth-transition transform ${
+                ? "bg-white dark:bg-slate-600 hover:bg-blue-50 dark:hover:bg-blue-800/50 border border-slate-300 dark:border-slate-500 hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+                : "bg-slate-100/80 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600"
+            } ${cell !== null ? "bg-white dark:bg-slate-600 border border-slate-300 dark:border-slate-500 shadow-inner" : ""} smooth-transition transform ${
               cell === "X" ? "text-blue-600 dark:text-blue-300" : "text-rose-500 dark:text-rose-300"
             }`}
+            style={{ width: 'var(--cell-size)', height: 'var(--cell-size)' }}
             onClick={() => handleCellClick(cellIndex)}
             disabled={cell !== null || disabled}
           >
             {/* Ghost Hover Effect */}
             {isActive && !cell && !disabled && (
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
-                <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-gradient-to-r from-blue-400 to-indigo-400 dark:from-blue-300 dark:to-indigo-300 animate-pulse shadow-lg shadow-blue-400/50" />
+                <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-gradient-to-r from-blue-400 to-indigo-400 dark:from-blue-300 dark:to-indigo-300 animate-pulse shadow-lg shadow-blue-400/50" />
               </div>
             )}
 
             {cell === "X" ? (
-              <X className="w-5 h-5 xs:w-6 xs:h-6 sm:w-6 sm:h-6 md:w-7 md:h-7 animate-scaleIn stroke-[3] drop-shadow-md dark:drop-shadow-[0_2px_3px_rgba(147,197,253,0.3)]" />
+              <X style={{ width: 'var(--icon-size)', height: 'var(--icon-size)' }} className="animate-scaleIn stroke-[3] drop-shadow-md dark:drop-shadow-[0_2px_3px_rgba(147,197,253,0.3)]" />
             ) : cell === "O" ? (
-              <Circle className="w-4 h-4 xs:w-5 xs:h-5 sm:w-5 sm:h-5 md:w-6 md:h-6 animate-scaleIn stroke-[3] drop-shadow-md dark:drop-shadow-[0_2px_3px_rgba(253,164,175,0.3)]" />
+              <Circle style={{ width: 'var(--icon-size-small)', height: 'var(--icon-size-small)' }} className="animate-scaleIn stroke-[3] drop-shadow-md dark:drop-shadow-[0_2px_3px_rgba(253,164,175,0.3)]" />
             ) : null}
           </button>
         ))}

@@ -72,7 +72,7 @@ def get_pool_status() -> dict:
         "checked_in": pool.checkedin(),
         "checked_out": pool.checkedout(),
         "overflow": pool.overflow(),
-        "invalid": pool.invalidatedcount if hasattr(pool, 'invalidatedcount') else 0,
+        "invalid": pool.invalidatedcount() if hasattr(pool, 'invalidatedcount') else 0,
     }
 
 

@@ -103,11 +103,27 @@ class AuthService:
                 user.updated_at = datetime.utcnow()
                 db.commit()
                 db.refresh(user)
+            
+            # Extract user data before session closes
+            user_id = user.id
+            user_data = UserDB(
+                id=user.id,
+                email=user.email,
+                name=user.name,
+                google_id=user.google_id,
+                profile_picture=user.profile_picture,
+                points=user.points,
+                wins=user.wins,
+                losses=user.losses,
+                draws=user.draws,
+                created_at=user.created_at,
+                updated_at=user.updated_at
+            )
         
-        # Create token
-        access_token = AuthService.create_access_token(user.id)
+        # Create token outside the session context
+        access_token = AuthService.create_access_token(user_id)
         
-        return user, access_token
+        return user_data, access_token
     
     @staticmethod
     def get_user(user_id: str) -> UserDB:

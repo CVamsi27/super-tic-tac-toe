@@ -75,6 +75,13 @@ async def get_game_history(user_id: str = Depends(get_current_user_id)) -> list[
     """Get user's game history"""
     return auth_service.get_game_history(user_id)
 
+# Scoring configuration
+SCORING_RATES = {
+    "WIN": 25,      # Points for winning
+    "LOSS": -10,    # Points for losing  
+    "DRAW": 5,      # Points for a draw
+}
+
 @router.post("/auth/save-game")
 async def save_game_result(
     result: str,
@@ -83,14 +90,8 @@ async def save_game_result(
     user_id: str = Depends(get_current_user_id)
 ) -> GameHistoryResponse:
     """Save game result"""
-    # Calculate points
-    points = 0
-    if result == "WIN":
-        points = 10
-    elif result == "LOSS":
-        points = -5
-    elif result == "DRAW":
-        points = 1
+    # Calculate points using scoring rates
+    points = SCORING_RATES.get(result, 0)
     
     game_result = auth_service.save_game_result(user_id, result, opponent_name, game_duration, points)
     
@@ -141,3 +142,12 @@ async def get_top_players(limit: int = 10) -> list[UserStatsResponse]:
     )
     
     return users
+
+@router.get("/scoring-rates")
+async def get_scoring_rates():
+    """Get current scoring rates for the leaderboard"""
+    return {
+        "win": SCORING_RATES["WIN"],
+        "loss": SCORING_RATES["LOSS"],
+        "draw": SCORING_RATES["DRAW"],
+    }

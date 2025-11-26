@@ -152,11 +152,16 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str, user_id: str):
             elif message_type == 'join_game':
                 await game_service.handle_join_game(websocket, game_id, user_id, game_service.active_websockets[game_id])
             elif message_type == 'make_move':
-                await game_service.handle_make_move(websocket, game_id, user_id, data['move'], game_service.active_websockets[game_id])
+                move_data = data.get('move')
+                if not move_data:
+                    await websocket.send_json({"type": "error", "message": "Missing move data"})
+                    continue
+                await game_service.handle_make_move(websocket, game_id, user_id, move_data, game_service.active_websockets[game_id])
             elif message_type == 'reset_game':
                 await game_service.handle_reset_game(game_id, user_id, game_service.active_websockets[game_id])
             elif message_type == 'leave':
-                await game_service.handle_leave(game_id, data['userId'], game_service.active_websockets[game_id])
+                leave_user_id = data.get('userId', user_id)
+                await game_service.handle_leave(game_id, leave_user_id, game_service.active_websockets[game_id])
             else:
                 logger.warning(f"Unknown message type: {message_type}")
                 await websocket.send_json({"type": "error", "message": "Invalid action"})

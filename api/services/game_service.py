@@ -1027,6 +1027,9 @@ class GameService:
                     continue
 
                 for player in list(game.players):
+                    # Skip if player has no last_active timestamp
+                    if not player.last_active:
+                        continue
                     if datetime.now() - player.last_active > timedelta(minutes=2):
                         game.players = [p for p in game.players if p.id != player.id]
                         

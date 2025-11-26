@@ -154,6 +154,20 @@ body {
   }
 }
 
+/* Responsive Game Board Sizing */
+:root {
+  /* Cell sizes that scale with viewport */
+  --cell-size: clamp(24px, 8vw, 48px);
+  --cell-gap: clamp(1px, 0.5vw, 6px);
+  --board-padding: clamp(2px, 0.8vw, 10px);
+  --board-gap: clamp(2px, 1vw, 16px);
+  --container-padding: clamp(4px, 1.2vw, 20px);
+  
+  /* Icon sizes */
+  --icon-size: clamp(14px, 5vw, 28px);
+  --icon-size-small: clamp(12px, 4vw, 24px);
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

@@ -69,7 +69,7 @@ export default function LeaderboardPage() {
         </Link>
 
         {/* Header Card */}
-        <div className="bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 rounded-2xl sm:rounded-3xl shadow-xl shadow-amber-500/20 p-4 sm:p-6 mb-5 sm:mb-6 text-white animate-fadeInUp">
+        <div className="bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 rounded-2xl sm:rounded-3xl shadow-xl shadow-amber-500/20 p-4 sm:p-6 mb-4 text-white animate-fadeInUp">
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="p-2.5 sm:p-3 bg-white/20 rounded-xl sm:rounded-2xl">
               <Trophy size={28} className="sm:w-8 sm:h-8" />
@@ -77,6 +77,27 @@ export default function LeaderboardPage() {
             <div>
               <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold">Global Leaderboard</h1>
               <p className="text-amber-100 mt-0.5 text-xs sm:text-sm">Compete and climb to the top!</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Scoring Rates Info */}
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 p-3 sm:p-4 mb-5 sm:mb-6 animate-fadeInUp">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm font-medium">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              <span className="text-slate-600 dark:text-slate-400">Win:</span>
+              <span className="text-green-600 dark:text-green-400 font-bold">+25 pts</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+              <span className="text-slate-600 dark:text-slate-400">Draw:</span>
+              <span className="text-amber-600 dark:text-amber-400 font-bold">+5 pts</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-red-500"></span>
+              <span className="text-slate-600 dark:text-slate-400">Loss:</span>
+              <span className="text-red-500 dark:text-red-400 font-bold">-10 pts</span>
             </div>
           </div>
         </div>
@@ -257,22 +278,6 @@ export default function LeaderboardPage() {
             </div>
           </>
         )}
-
-        {/* Scoring Info */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-6 sm:mt-8 animate-fadeInUp">
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800/50 rounded-xl p-3 sm:p-4 text-center">
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium">Victory</p>
-            <p className="text-xl sm:text-2xl font-extrabold text-green-600 dark:text-green-400 mt-1">+10 pts</p>
-          </div>
-          <div className="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-3 sm:p-4 text-center">
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium">Draw</p>
-            <p className="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">+1 pt</p>
-          </div>
-          <div className="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-3 sm:p-4 text-center">
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium">Defeat</p>
-            <p className="text-xl sm:text-2xl font-extrabold text-red-600 dark:text-red-400 mt-1">-5 pts</p>
-          </div>
-        </div>
       </div>
     </div>
   );

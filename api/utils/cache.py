@@ -43,7 +43,7 @@ class InMemoryCache:
         self._max_size = max_size
         self._default_ttl = default_ttl
         self._cleanup_interval = cleanup_interval
-        self._lock = asyncio.Lock()
+        self._lock: Optional[asyncio.Lock] = None  # Lazy initialization
         self._last_cleanup = time.time()
         self._stats = {
             "hits": 0,
@@ -51,12 +51,18 @@ class InMemoryCache:
             "evictions": 0,
         }
     
+    def _get_lock(self) -> asyncio.Lock:
+        """Lazily initialize the lock to avoid event loop issues"""
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+        return self._lock
+    
     async def get(self, key: str) -> Optional[Any]:
         """
         Get a value from the cache.
         Returns None if not found or expired.
         """
-        async with self._lock:
+        async with self._get_lock():
             await self._maybe_cleanup()
             
             entry = self._cache.get(key)
@@ -86,7 +92,7 @@ class InMemoryCache:
         """
         Set a value in the cache with optional TTL.
         """
-        async with self._lock:
+        async with self._get_lock():
             now = time.time()
             expires_at = now + (ttl or self._default_ttl)
             
@@ -104,7 +110,7 @@ class InMemoryCache:
     
     async def delete(self, key: str) -> bool:
         """Delete a key from the cache"""
-        async with self._lock:
+        async with self._get_lock():
             if key in self._cache:
                 del self._cache[key]
                 return True
@@ -112,7 +118,7 @@ class InMemoryCache:
     
     async def clear(self) -> None:
         """Clear all entries from the cache"""
-        async with self._lock:
+        async with self._get_lock():
             self._cache.clear()
     
     async def invalidate_pattern(self, pattern: str) -> int:
@@ -120,7 +126,7 @@ class InMemoryCache:
         Invalidate all keys matching a pattern (prefix match).
         Returns number of keys deleted.
         """
-        async with self._lock:
+        async with self._get_lock():
             keys_to_delete = [
                 key for key in self._cache.keys()
                 if key.startswith(pattern)

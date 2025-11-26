@@ -7,7 +7,7 @@ Enhanced with thread safety, better cleanup, and statistics.
 from typing import Dict, Optional, List, Tuple
 from datetime import datetime, timedelta
 from uuid import uuid4
-import asyncio
+import threading
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
@@ -46,13 +46,13 @@ class MatchedGame:
 class MatchmakingQueue:
     """
     In-memory queue for matchmaking with enhanced features.
-    Thread-safe operations with asyncio lock support.
+    Thread-safe operations with threading lock support.
     """
     
     def __init__(self, max_wait_time: int = 300):
         self.queue: List[QueueEntry] = []
         self.matched_games: Dict[str, MatchedGame] = {}
-        self._lock = asyncio.Lock()
+        self._lock = threading.Lock()  # Use threading lock for sync operations
         self.max_wait_time = max_wait_time  # Maximum seconds before auto-removal
         
         # Statistics
@@ -276,7 +276,5 @@ class MatchmakingQueue:
         }
 
 
-# Global matchmaking queue instance
-matchmaking_queue = MatchmakingQueue()
 # Global matchmaking queue instance
 matchmaking_queue = MatchmakingQueue()

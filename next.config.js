@@ -8,6 +8,19 @@ const nextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin-allow-popups",
+          },
+        ],
+      },
+    ];
+  },
   rewrites: async () => {
     // Determine backend URL based on environment
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ||
