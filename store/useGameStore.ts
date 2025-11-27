@@ -76,15 +76,22 @@ export const useGameStore = create<GameStore>()(
         }),
 
       updateWatcher: (gameId, watchers) =>
-        set((state) => ({
-          games: {
-            ...state.games,
-            [gameId]: {
-              ...state.games[gameId],
-              watchers,
+        set((state) => {
+          // Only update if the game exists to avoid creating partial state
+          if (!state.games[gameId]) {
+            return state;
+          }
+          
+          return {
+            games: {
+              ...state.games,
+              [gameId]: {
+                ...state.games[gameId],
+                watchers,
+              },
             },
-          },
-        })),
+          };
+        }),
 
       updateGame: (
         gameId,

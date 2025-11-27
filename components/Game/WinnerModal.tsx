@@ -143,6 +143,14 @@ export default function WinnerModal({ winner, gameState, sendMessage, userId }: 
                       <p className="text-xl sm:text-2xl font-extrabold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                         You Won! 🎉
                       </p>
+                      
+                      {/* Score Display */}
+                      {gameState && (
+                        <div className="mt-2 text-sm sm:text-base font-medium text-slate-600 dark:text-slate-300">
+                          Score: {gameState.globalBoard.filter(b => b.every(c => c === winner)).length} - {gameState.globalBoard.filter(b => b.every(c => c !== winner && c !== null && c !== "T")).length}
+                        </div>
+                      )}
+                      
                       <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                         Congratulations on your victory!
                       </p>
@@ -164,6 +172,14 @@ export default function WinnerModal({ winner, gameState, sendMessage, userId }: 
                           `Player ${winner} wins!`
                         )}
                       </p>
+                      
+                      {/* Score Display */}
+                      {gameState && (
+                        <div className="mt-2 text-sm sm:text-base font-medium text-slate-600 dark:text-slate-300">
+                          Score: {gameState.globalBoard.filter(b => b.every(c => c === winner)).length} - {gameState.globalBoard.filter(b => b.every(c => c !== winner && c !== null && c !== "T")).length}
+                        </div>
+                      )}
+                      
                       <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                         Better luck next time!
                       </p>

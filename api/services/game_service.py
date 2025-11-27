@@ -653,84 +653,48 @@ class GameService:
         }
 
     def _calculate_points(self, game: GameState, player_symbol: PlayerSymbol, result: str) -> int:
-        """
-        Calculate points based on game result and how close the game was.
-        
-        Scoring factors:
-        - Base points for win/loss/draw
-        - Bonus/reduction based on board control dominance
-        - Bonus for close games (opponent was near winning)
-        - Bonus for quick decisive wins
-        - Reduced penalty for close losses
-        """
+        """Calculate points based on game result and board control."""
         closeness = self._calculate_game_closeness(game, player_symbol)
         
-        # Base points
         if result == "WIN":
-            base_points = 10
+            # Base points for win
+            base_points = 25
             
-            # Dominant victory bonus (won significantly more boards)
-            if closeness["board_difference"] >= 4:
-                base_points += 5  # Dominant win bonus
-            elif closeness["board_difference"] >= 2:
-                base_points += 2  # Good control bonus
+            # Bonus for dominant victory (won many more boards)
+            board_diff = closeness["board_difference"]
+            if board_diff >= 5:
+                base_points += 10  # Very dominant (won 5+ more boards)
+            elif board_diff >= 3:
+                base_points += 5   # Dominant (won 3-4 more boards)
             
-            # Close game bonus (opponent was threatening)
-            if closeness["global_opponent_near_wins"] >= 2:
-                base_points += 3  # Hard-fought victory
-            elif closeness["opponent_near_wins"] >= 5:
-                base_points += 2  # Opponent was competitive
+            return base_points
             
-            # Quick win bonus
-            if closeness["move_count"] <= 20:
-                base_points += 5  # Speed bonus
-            elif closeness["move_count"] <= 30:
-                base_points += 2  # Efficient play
-            
-            # AI difficulty bonus (handled elsewhere, but check for hard-fought AI)
-            if game.mode == GameMode.AI:
-                if closeness["opponent_boards_won"] >= 2:
-                    base_points += 2  # AI put up a fight
-                    
         elif result == "LOSS":
-            base_points = -5
+            # Penalty for loss, reduced if close game
+            base_points = -10
             
-            # Reduced penalty for close games
-            if closeness["board_difference"] >= -1:
-                base_points += 2  # Very close loss
-            elif closeness["board_difference"] >= -2:
-                base_points += 1  # Competitive loss
+            # Reduce penalty for close games
+            board_diff = closeness["board_difference"]
+            if board_diff >= -1:  # Lost by 1 board or tied boards
+                base_points += 5   # Very close loss
+            elif board_diff >= -2:  # Lost by 2 boards
+                base_points += 3   # Close loss
             
-            # Fought hard bonus
-            if closeness["global_player_near_wins"] >= 2:
-                base_points += 2  # Almost won
-            elif closeness["player_near_wins"] >= 5:
-                base_points += 1  # Showed effort
+            return base_points
             
-            # Long game reduction (showed persistence)
-            if closeness["move_count"] >= 50:
-                base_points += 1  # Persistence bonus
-                
         elif result == "DRAW":
-            base_points = 3  # Increased base for draw
-            
-            # Bonus for competitive draw
-            if closeness["board_difference"] == 0:
-                base_points += 2  # Perfectly matched
-            elif abs(closeness["board_difference"]) <= 1:
-                base_points += 1  # Very close
-            
-            # Long game draw bonus
-            if closeness["move_count"] >= 50:
-                base_points += 2  # Epic battle
-            elif closeness["move_count"] >= 40:
-                base_points += 1  # Good game
+            # Points for draw (equal boards won)
+            return 5
         
-        return base_points
+        return 0
 
     def _save_game_results(self, game: GameState) -> None:
         """Save game results and update player stats with closeness-based scoring"""
         try:
+            # Skip saving results for AI games - they don't affect player scores
+            if game.mode == GameMode.AI:
+                return
+            
             with get_db() as db:
                 game_duration = 0
                 if game.last_move_timestamp:
@@ -762,20 +726,17 @@ class GameService:
                     # Find opponent
                     opponent_name = None
                     
-                    if game.mode == GameMode.AI:
-                        opponent_name = "AI (Bot)"
-                    else:
-                        for p_id, p_symbol in player_symbols.items():
-                            if p_id != player_id:
-                                opponent_id = p_id
-                                opponent_player = next((p for p in players if p.id == opponent_id), None)
-                                if opponent_player:
-                                    # Get opponent name from database
-                                    opponent_db = db.query(PlayerDB).filter(PlayerDB.id == opponent_id).first()
-                                    if opponent_db:
-                                        opponent_user = db.query(UserDB).filter(UserDB.id == opponent_id).first()
-                                        opponent_name = opponent_user.name if opponent_user else "Unknown"
-                                break
+                    for p_id, p_symbol in player_symbols.items():
+                        if p_id != player_id:
+                            opponent_id = p_id
+                            opponent_player = next((p for p in players if p.id == opponent_id), None)
+                            if opponent_player:
+                                # Get opponent name from database
+                                opponent_db = db.query(PlayerDB).filter(PlayerDB.id == opponent_id).first()
+                                if opponent_db:
+                                    opponent_user = db.query(UserDB).filter(UserDB.id == opponent_id).first()
+                                    opponent_name = opponent_user.name if opponent_user else "Unknown"
+                            break
                     
                     # Check if user exists in database before saving
                     user_exists = db.query(UserDB).filter(UserDB.id == player_id).first()

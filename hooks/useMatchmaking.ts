@@ -20,6 +20,18 @@ export function useMatchmaking(userId: string) {
     const joinQueue = async () => {
         try {
             setIsSearching(true);
+
+            // Ensure we're not in a stale state by trying to leave first
+            // This handles cases where the user might be "stuck" in a queue from a previous session
+            try {
+                await fetch(`/api/py/game/matchmaking/leave?user_id=${userId}`, {
+                    method: 'POST',
+                });
+            } catch (e) {
+                // Ignore errors here, we just want to try to clear state
+                console.log("Cleanup leave failed, proceeding to join");
+            }
+
             const response = await fetch(`/api/py/game/matchmaking/join?user_id=${userId}`, {
                 method: 'POST',
             });

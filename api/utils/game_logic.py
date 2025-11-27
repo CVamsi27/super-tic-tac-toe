@@ -74,46 +74,30 @@ def validate_move(game: GameState, move: GameMove):
 def check_global_winner(global_board):
     """Check if there's a winner in the super tic-tac-toe game.
     
-    A player wins by getting 3 boards in a row (horizontal, vertical, or diagonal).
-    If all boards are complete with no 3-in-a-row, it's a tie.
+    Winner is determined after ALL 9 boards are complete.
+    The player who won more boards wins the game.
     """
-    win_patterns = [
-        [0, 1, 2],  # Top row
-        [3, 4, 5],  # Middle row
-        [6, 7, 8],  # Bottom row
-        [0, 3, 6],  # Left column
-        [1, 4, 7],  # Middle column
-        [2, 5, 8],  # Right column
-        [0, 4, 8],  # Diagonal
-        [2, 4, 6]   # Anti-diagonal
-    ]
-    
+    # Get winner for each small board
     local_board_winners = []
-    incomplete_boards = 0
-    
     for local_board in global_board:
-        if None in local_board:
-            incomplete_boards += 1
-            local_board_winners.append(None)
-            continue
-            
         winner = check_board_winner(local_board)
         local_board_winners.append(winner)
     
-    # Check for 3-in-a-row win patterns
-    for pattern in win_patterns:
-        a, b, c = pattern
-        if (local_board_winners[a] is not None and 
-            local_board_winners[a] != PlayerSymbol.T and
-            local_board_winners[a] == local_board_winners[b] and 
-            local_board_winners[a] == local_board_winners[c]):
-            return local_board_winners[a]
+    # Game continues if any board is still in progress
+    if any(winner is None for winner in local_board_winners):
+        return None
     
-    # If all boards are complete and no winner, it's a tie
-    if incomplete_boards == 0:
-        return PlayerSymbol.T
+    # All boards are complete - count wins
+    x_wins = sum(1 for w in local_board_winners if w == PlayerSymbol.X)
+    o_wins = sum(1 for w in local_board_winners if w == PlayerSymbol.O)
     
-    return None
+    # Determine winner based on board count
+    if x_wins > o_wins:
+        return PlayerSymbol.X
+    elif o_wins > x_wins:
+        return PlayerSymbol.O
+    else:
+        return PlayerSymbol.T  # Tie
 
 def remove_player_from_game(games: Dict[str, GameState], game_id: str, user_id: str) -> None:
     if game_id in games:
