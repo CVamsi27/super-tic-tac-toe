@@ -3,10 +3,11 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 interface MatchmakingStatus {
-    status: 'queued' | 'matched' | 'not_queued';
+    status: 'queued' | 'matched' | 'not_queued' | 'error';
     position?: number;
     queue_size?: number;
     game_id?: string;
+    message?: string;
 }
 
 export function useMatchmaking(userId: string) {
@@ -22,7 +23,7 @@ export function useMatchmaking(userId: string) {
             const response = await fetch(`/api/py/game/matchmaking/join?user_id=${userId}`, {
                 method: 'POST',
             });
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('Matchmaking error:', response.status, errorText);
@@ -30,7 +31,7 @@ export function useMatchmaking(userId: string) {
                 setIsSearching(false);
                 return;
             }
-            
+
             const data: MatchmakingStatus = await response.json();
 
             if (data.status === 'matched' && data.game_id) {
@@ -42,7 +43,7 @@ export function useMatchmaking(userId: string) {
                 toast.info('Searching for opponent...');
                 startPolling();
             } else if (data.status === 'error') {
-                toast.error('Matchmaking error', { description: (data as any).message || 'Unknown error' });
+                toast.error('Matchmaking error', { description: data.message || 'Unknown error' });
                 setIsSearching(false);
             }
         } catch (error) {
@@ -76,7 +77,7 @@ export function useMatchmaking(userId: string) {
         pollingInterval.current = setInterval(async () => {
             try {
                 const response = await fetch(`/api/py/game/matchmaking/status?user_id=${userId}`);
-                
+
                 if (!response.ok) {
                     errorCount++;
                     console.error('Polling status error:', response.status);
@@ -87,7 +88,7 @@ export function useMatchmaking(userId: string) {
                     }
                     return;
                 }
-                
+
                 errorCount = 0; // Reset on success
                 const data: MatchmakingStatus = await response.json();
 

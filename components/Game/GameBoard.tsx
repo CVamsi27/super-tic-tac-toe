@@ -40,14 +40,11 @@ export const GameBoard: React.FC<{
   }, [globalBoard, activeBoard]);
 
   return (
-    <div className="relative">
+    <div className="relative w-full max-w-[min(90vw,460px)] lg:max-w-none lg:h-full mx-auto aspect-square">
       {/* Decorative background glow */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-violet-500/10 blur-3xl -z-10 rounded-full scale-110" />
       
-      <div 
-        className="grid grid-cols-3 w-fit bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl sm:rounded-3xl border-2 border-slate-300/80 dark:border-slate-600/80 shadow-2xl smooth-transition"
-        style={{ gap: 'var(--board-gap)', padding: 'var(--container-padding)' }}
-      >
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 lg:gap-5 w-full h-full p-2.5 sm:p-3.5 md:p-5 lg:p-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl sm:rounded-3xl border-2 border-slate-300/80 dark:border-slate-600/80 shadow-2xl smooth-transition mx-auto isolate">
         {globalBoard.map((board, boardIndex) => (
           <SmallBoard
             userId={userId}

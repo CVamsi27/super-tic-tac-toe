@@ -112,11 +112,11 @@ class AuthService:
                 name=user.name,
                 google_id=user.google_id,
                 profile_picture=user.profile_picture,
-                points=user.points,
-                wins=user.wins,
-                losses=user.losses,
-                draws=user.draws,
-                created_at=user.created_at,
+                points=user.points or 0,
+                wins=user.wins or 0,
+                losses=user.losses or 0,
+                draws=user.draws or 0,
+                created_at=user.created_at or datetime.utcnow(),
                 updated_at=user.updated_at
             )
         
@@ -146,11 +146,11 @@ class AuthService:
             email=user.email,
             name=user.name,
             profile_picture=user.profile_picture,
-            points=user.points,
-            wins=user.wins,
-            losses=user.losses,
-            draws=user.draws,
-            created_at=user.created_at
+            points=user.points or 0,
+            wins=user.wins or 0,
+            losses=user.losses or 0,
+            draws=user.draws or 0,
+            created_at=user.created_at or datetime.utcnow()
         )
     
     @staticmethod
@@ -234,10 +234,10 @@ class AuthService:
                     id=user.id,
                     email=user.email,
                     name=user.name,
-                    points=user.points,
-                    wins=user.wins,
-                    losses=user.losses,
-                    draws=user.draws,
+                    points=user.points or 0,
+                    wins=user.wins or 0,
+                    losses=user.losses or 0,
+                    draws=user.draws or 0,
                     profile_picture=user.profile_picture
                 )
                 for user in users
