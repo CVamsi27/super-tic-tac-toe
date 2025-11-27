@@ -7,22 +7,22 @@ export interface UserSettings {
   // Audio
   soundEnabled: boolean;
   soundVolume: number;
-  
+
   // Visual
   theme: "light" | "dark" | "system";
   showAnimations: boolean;
   highlightHints: boolean;
-  
+
   // Gameplay
   showMoveHistory: boolean;
   showTimer: boolean;
   confirmMoves: boolean;
-  
+
   // Accessibility
   hapticFeedback: boolean;
   largeText: boolean;
   highContrast: boolean;
-  
+
   // Stats
   totalGamesPlayed: number;
   dailyStreak: number;
@@ -34,27 +34,27 @@ interface SettingsStore extends UserSettings {
   // Audio actions
   setSoundEnabled: (enabled: boolean) => void;
   setSoundVolume: (volume: number) => void;
-  
+
   // Visual actions
   setTheme: (theme: "light" | "dark" | "system") => void;
   setShowAnimations: (show: boolean) => void;
   setHighlightHints: (show: boolean) => void;
-  
+
   // Gameplay actions
   setShowMoveHistory: (show: boolean) => void;
   setShowTimer: (show: boolean) => void;
   setConfirmMoves: (confirm: boolean) => void;
-  
+
   // Accessibility actions
   setHapticFeedback: (enabled: boolean) => void;
   setLargeText: (enabled: boolean) => void;
   setHighContrast: (enabled: boolean) => void;
-  
+
   // Stats actions
   incrementGamesPlayed: () => void;
   updateDailyStreak: () => void;
   addAchievement: (achievementId: string) => void;
-  
+
   // Reset
   resetSettings: () => void;
 }
@@ -62,7 +62,7 @@ interface SettingsStore extends UserSettings {
 const defaultSettings: UserSettings = {
   soundEnabled: true,
   soundVolume: 0.5,
-  theme: "system",
+  theme: "light",
   showAnimations: true,
   highlightHints: true,
   showMoveHistory: false,
