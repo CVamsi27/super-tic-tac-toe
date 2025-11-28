@@ -68,6 +68,9 @@ importers:
       sonner:
         specifier: ^1.7.1
         version: 1.7.1(react-dom@19.0.0-rc-66855b96-20241106(react@19.0.0-rc-66855b96-20241106))(react@19.0.0-rc-66855b96-20241106)
+      super-tic-tac-toe:
+        specifier: 'link:'
+        version: 'link:'
       tailwind-merge:
         specifier: ^2.5.5
         version: 2.5.5

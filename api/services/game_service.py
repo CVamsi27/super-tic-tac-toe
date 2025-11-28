@@ -830,6 +830,18 @@ class GameService:
                             game.players.append(player)
                     else:
                         player = existing_player_in_game
+                        
+                        # Handle case where player is in DB but not in memory (inconsistency)
+                        if not player:
+                            user = db.query(UserDB).filter(UserDB.id == existing_player_db.id).first()
+                            player = Player(
+                                id=existing_player_db.id,
+                                name=user.name if user else "Unknown",
+                                symbol=existing_player_db.symbol,
+                                status=existing_player_db.status,
+                                join_order=existing_player_db.join_order
+                            )
+                            game.players.append(player)
 
                     if player.status == PlayerStatus.PLAYER:
                         if not game.current_player:

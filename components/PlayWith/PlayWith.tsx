@@ -112,7 +112,7 @@ const PlayWith = () => {
       { mode, ai_difficulty: difficulty || "medium" },
       {
         onSuccess: (data) => {
-          router.push(`/game/${data.game_id}`);
+          router.push(`/game/${data.game_id}?mode=${mode}`);
         },
         onError: (error) => {
           const message = extractErrorMessage(error);

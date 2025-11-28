@@ -1,21 +1,17 @@
 "use client";
 
 import React from "react";
-import { Home, RotateCcw, Settings, Trophy, HelpCircle } from "lucide-react";
+import { Home, BookOpen, Settings, Trophy, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
 
 interface GameToolbarProps {
-  onReset?: () => void;
   onHelp?: () => void;
-  showReset?: boolean;
   className?: string;
 }
 
 export function GameToolbar({ 
-  onReset, 
   onHelp, 
-  showReset = true,
   className = "" 
 }: GameToolbarProps) {
   const { playClick } = useSoundEffects();
@@ -32,12 +28,12 @@ export function GameToolbar({
       href: "/",
       onClick: undefined,
     },
-    ...(showReset && onReset ? [{
-      icon: <RotateCcw className="w-5 h-5" />,
-      label: "Reset",
-      href: undefined,
-      onClick: onReset,
-    }] : []),
+    {
+      icon: <BookOpen className="w-5 h-5" />,
+      label: "Rules",
+      href: "/rules",
+      onClick: undefined,
+    },
     {
       icon: <Trophy className="w-5 h-5" />,
       label: "Leaderboard",
@@ -50,12 +46,12 @@ export function GameToolbar({
       href: "/settings",
       onClick: undefined,
     },
-    ...(onHelp ? [{
+    {
       icon: <HelpCircle className="w-5 h-5" />,
       label: "Help",
       href: undefined,
       onClick: onHelp,
-    }] : []),
+    },
   ];
 
   return (

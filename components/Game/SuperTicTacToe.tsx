@@ -1,23 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlayerStatus } from "./PlayerStatus";
 import { GameBoard } from "./GameBoard";
-import { useParams } from "next/navigation";
-import { ResetGame } from "./ResetGame";
+import { useParams, useSearchParams } from "next/navigation";
+import { useGameStore } from "@/store/useGameStore";
+import { GameModeType } from "@/types";
+
 import { CopyGameUrl } from "./CopyGameUrl";
 import { useGameSocket } from "@/hooks/useGameWebSocket";
 import { GameTimer } from "./GameTimer";
 import { ShareGame } from "@/components/ShareGame";
 import { GameToolbar } from "@/components/GameToolbar";
 import { ShortcutsModal } from "@/components/ShortcutsModal";
-import { Bot, Eye, Home, RotateCcw, Settings, Trophy, HelpCircle } from "lucide-react";
+import { Bot, Eye, Home, Settings, Trophy, HelpCircle, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
 
 const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
   const { gameId } = useParams<{ gameId: string }>();
+  const searchParams = useSearchParams();
+  const { initializeGame } = useGameStore();
+
+  useEffect(() => {
+    const mode = searchParams.get("mode");
+    if (mode && Object.values(GameModeType).includes(mode as GameModeType)) {
+      initializeGame(gameId, mode as GameModeType);
+    }
+  }, [gameId, searchParams, initializeGame]);
   const { gameState, sendMessage } = useGameSocket(gameId, userId);
   const [showHelp, setShowHelp] = useState(false);
   const { playClick } = useSoundEffects();
@@ -27,18 +38,7 @@ const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
   const isGameOver = gameState?.winner !== null;
   const gameStarted = isGameReady && gameState.players.length === 2;
   const isGameActive = gameStarted && !isGameOver;
-  const canReset = gameState?.mode !== "random" && 
-    gameState?.players?.find((p) => p?.id === userId)?.status !== "WATCHER";
 
-  const handleReset = () => {
-    if (canReset) {
-      sendMessage({
-        type: "reset_game",
-        gameId: gameId,
-        userId: userId,
-      });
-    }
-  };
 
   const handleToolbarClick = (callback?: () => void) => {
     playClick();
@@ -97,22 +97,13 @@ const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
             {/* Game Timer */}
             <GameTimer isGameActive={isGameActive} gameStarted={gameStarted} />
             
-            {/* Mobile Reset Button */}
-            <div className="lg:hidden">
-              {gameState?.mode !== "random" && (
-                <ResetGame
-                  classname={`${
-                    gameState?.players?.find((p) => p?.id === userId)?.status ===
-                    "WATCHER"
-                      ? "pointer-events-none opacity-50"
-                      : ""
-                  } smooth-transition`}
-                  gameId={gameId}
-                  userId={userId}
-                  sendMessage={sendMessage}
-                />
-              )}
-            </div>
+            {/* Mobile Rules Button */}
+            <Link href="/rules" onClick={() => handleToolbarClick()} className="lg:hidden">
+              <button className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 border border-blue-200 dark:border-blue-800 transition-all flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs sm:text-sm font-semibold text-blue-700 dark:text-blue-300 hidden sm:inline">Rules</span>
+              </button>
+            </Link>
           </div>
 
           {/* Desktop Info Banners */}
@@ -162,14 +153,12 @@ const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
               <span className="font-medium text-slate-600 dark:text-slate-300">Home</span>
             </Link>
 
-            {canReset && (
-               <button onClick={() => handleToolbarClick(handleReset)} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all group text-left">
-                <div className="p-2 bg-white dark:bg-slate-900 rounded-lg shadow-sm group-hover:scale-110 transition-transform">
-                  <RotateCcw className="w-5 h-5 text-slate-600 dark:text-slate-400 group-hover:text-blue-500" />
-                </div>
-                <span className="font-medium text-slate-600 dark:text-slate-300">Reset</span>
-              </button>
-            )}
+            <Link href="/rules" onClick={() => handleToolbarClick()} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all group">
+              <div className="p-2 bg-white dark:bg-slate-900 rounded-lg shadow-sm group-hover:scale-110 transition-transform">
+                <BookOpen className="w-5 h-5 text-slate-600 dark:text-slate-400 group-hover:text-blue-500" />
+              </div>
+              <span className="font-medium text-slate-600 dark:text-slate-300">Rules</span>
+            </Link>
 
             <Link href="/leaderboard" onClick={() => handleToolbarClick()} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all group">
               <div className="p-2 bg-white dark:bg-slate-900 rounded-lg shadow-sm group-hover:scale-110 transition-transform">
@@ -218,9 +207,7 @@ const SuperTicTacToe: React.FC<{ userId: string }> = ({ userId }) => {
       {/* Bottom Toolbar - Mobile Only */}
       <div className="lg:hidden">
         <GameToolbar 
-          onReset={canReset ? handleReset : undefined}
           onHelp={() => setShowHelp(true)}
-          showReset={canReset}
         />
       </div>
       

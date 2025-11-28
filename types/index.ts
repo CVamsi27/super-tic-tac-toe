@@ -58,7 +58,7 @@ export interface GameState {
 
 export interface GameStore {
   games: Record<string, GameState>;
-  initializeGame: (gameId: string) => void;
+  initializeGame: (gameId: string, initialMode?: GameModeType) => void;
   addPlayer: (
     gameId: string,
     playerDetails: Player,

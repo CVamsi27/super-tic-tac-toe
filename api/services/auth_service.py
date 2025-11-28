@@ -226,7 +226,8 @@ class AuthService:
         """Get global leaderboard"""
         with get_db() as db:
             users = db.query(UserDB).order_by(
-                UserDB.points.desc()
+                UserDB.points.desc(),
+                UserDB.wins.desc()
             ).limit(limit).all()
             
             return [

@@ -25,11 +25,11 @@ export const useGameStore = create<GameStore>()(
     (set) => ({
       games: {},
 
-      initializeGame: (gameId: string) =>
+      initializeGame: (gameId: string, initialMode: GameModeType = GameModeType.REMOTE) =>
         set((state) => ({
           games: {
             ...state.games,
-            [gameId]: state.games[gameId] || createInitialGameState(gameId),
+            [gameId]: state.games[gameId] || { ...createInitialGameState(gameId), mode: initialMode },
           },
         })),
 
@@ -81,7 +81,7 @@ export const useGameStore = create<GameStore>()(
           if (!state.games[gameId]) {
             return state;
           }
-          
+
           return {
             games: {
               ...state.games,
