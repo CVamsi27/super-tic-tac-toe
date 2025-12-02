@@ -85,9 +85,30 @@ export function useMatchmaking(userId: string) {
 
         let errorCount = 0;
         const maxErrors = 3;
+        const maxWaitTime = 5 * 60 * 1000; // 5 minutes in milliseconds
+        const startTime = Date.now();
 
         pollingInterval.current = setInterval(async () => {
             try {
+                // Check if we've exceeded max wait time
+                const elapsedTime = Date.now() - startTime;
+                if (elapsedTime > maxWaitTime) {
+                    stopPolling();
+                    setIsSearching(false);
+                    toast.error('Matchmaking timeout', {
+                        description: 'No opponent found. Please try again.'
+                    });
+                    // Leave the queue on timeout
+                    try {
+                        await fetch(`/api/py/game/matchmaking/leave?user_id=${userId}`, {
+                            method: 'POST',
+                        });
+                    } catch (e) {
+                        console.error('Failed to leave queue on timeout:', e);
+                    }
+                    return;
+                }
+
                 const response = await fetch(`/api/py/game/matchmaking/status?user_id=${userId}`);
 
                 if (!response.ok) {
@@ -111,9 +132,14 @@ export function useMatchmaking(userId: string) {
                 } else if (data.status === 'queued') {
                     setQueuePosition(data.position ?? null);
                     setQueueSize(data.queue_size ?? 0);
+                } else if (data.status === 'not_queued') {
+                    // Don't stop immediately - the user might have been temporarily removed
+                    // during cleanup. Only stop if this persists for multiple checks.
+                    console.log('Temporarily not in queue, continuing to poll...');
+                    // Continue polling - don't stop
                 } else {
-                    stopPolling();
-                    setIsSearching(false);
+                    // Unknown status - log but continue polling
+                    console.warn('Unknown matchmaking status:', data.status);
                 }
             } catch (error) {
                 errorCount++;

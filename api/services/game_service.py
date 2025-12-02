@@ -812,46 +812,40 @@ class GameService:
             existing_player_db = db.query(PlayerDB).filter(PlayerDB.id == user_id).first()
             existing_player_in_game = next((p for p in game.players if p.id == user_id), None)
             
+            # If player already exists in this game, return them (reconnection case)
+            if existing_player_db and existing_player_db.game_id == game_id:
+                # Player is reconnecting to the same game
+                player = existing_player_in_game
+                
+                # Handle case where player is in DB but not in memory (inconsistency)
+                if not player:
+                    user = db.query(UserDB).filter(UserDB.id == existing_player_db.id).first()
+                    player = Player(
+                        id=existing_player_db.id,
+                        name=user.name if user else "Unknown",
+                        symbol=existing_player_db.symbol,
+                        status=existing_player_db.status,
+                        join_order=existing_player_db.join_order
+                    )
+                    game.players.append(player)
+                
+                # Only increment watcher count if this is a NEW watcher connection
+                # (not already counted in the game state)
+                if existing_player_db.status == PlayerStatus.WATCHER:
+                    # Check if watcher is already counted
+                    # We don't increment here as they're reconnecting, not joining fresh
+                    pass
+                
+                if player.status == PlayerStatus.PLAYER:
+                    if not game.current_player:
+                        game.current_player = player.symbol
+                        game_db.current_player = player.symbol
+                
+                db.commit()
+                return player
+            
+            # Player exists but in a different game - move them to this game
             if existing_player_db:
-                if existing_player_db.game_id == game_id:
-                    if existing_player_db.status == PlayerStatus.WATCHER:
-                        game.watchers_count += 1
-                        game_db.watchers_count = game.watchers_count
-                        
-                        if not existing_player_in_game:
-                            user = db.query(UserDB).filter(UserDB.id == existing_player_db.id).first()
-                            player = Player(
-                                id=existing_player_db.id,
-                                name=user.name if user else "Unknown",
-                                symbol=existing_player_db.symbol,
-                                status=existing_player_db.status,
-                                join_order=existing_player_db.join_order
-                            )
-                            game.players.append(player)
-                    else:
-                        player = existing_player_in_game
-                        
-                        # Handle case where player is in DB but not in memory (inconsistency)
-                        if not player:
-                            user = db.query(UserDB).filter(UserDB.id == existing_player_db.id).first()
-                            player = Player(
-                                id=existing_player_db.id,
-                                name=user.name if user else "Unknown",
-                                symbol=existing_player_db.symbol,
-                                status=existing_player_db.status,
-                                join_order=existing_player_db.join_order
-                            )
-                            game.players.append(player)
-
-                    if player.status == PlayerStatus.PLAYER:
-                        if not game.current_player:
-                            game.current_player = player.symbol
-                            game_db.current_player = player.symbol
-                    
-                    db.commit()
-
-                    return player
-                else:
                     active_players_count = len([p for p in game.players if p.status == PlayerStatus.PLAYER])
                     
                     if active_players_count < 2:
